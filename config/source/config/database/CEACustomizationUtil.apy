@@ -1176,30 +1176,38 @@ FUNCTION Check_Cause_Discount(wo_no_ IN VARCHAR2, type_ IN varchar2) return VARC
     return temp_;
   END Check_Cause_Discount;
 
-  FUNCTION Get_Allowed_Tax_Codes__(company_    IN VARCHAR2,
-                                   customer_   IN VARCHAR2,
-                                   catalog_no_ IN VARCHAR2) RETURN VARCHAR2 IS
-    allowed_tax_codes_ VARCHAR2(2000);
-  BEGIN
-    SELECT LISTAGG(fee_code, ', ') within GROUP(ORDER BY fee_code) fee_code
-      INTO allowed_tax_codes_
-      FROM (SELECT FEE_CODE
-              FROM TAX_CODE_RESTRICTED
-             WHERE fee_code IN
-                   (SELECT a.cf$_Tax_Code
-                      FROM SALES_PART_TAX_CODE_CLV a
-                     WHERE a.CF$_SALES_PART_NO = catalog_no_)
-               AND fee_code IN
-                   (SELECT b.cf$_tax_code
-                      FROM CUST_APPLICABLE_TAX_CODE_CLV b
-                     WHERE b.CF$_COMPANY = company_
-                       AND b.CF$_CUSTOMER = customer_)
-               AND COMPANY = company_);
-    RETURN allowed_tax_codes_;
-  EXCEPTION
-    WHEN OTHERS THEN
-      RETURN NULL;
-  END;
+   FUNCTION Get_Allowed_Tax_Codes__(
+      company_    IN VARCHAR2,
+      customer_   IN VARCHAR2,
+      catalog_no_ IN VARCHAR2) RETURN VARCHAR2
+   IS
+      allowed_tax_codes_ VARCHAR2(2000);
+      stmt_ VARCHAR2(2000);
+   BEGIN
+      stmt_ := 
+       'SELECT LISTAGG(fee_code, '', '') WITHIN GROUP(ORDER BY fee_code) fee_code
+        FROM (SELECT fee_code
+                FROM tax_code_restricted
+               WHERE fee_code IN
+                     (SELECT a.cf$_Tax_Code
+                        FROM sales_part_tax_code_clv a
+                       WHERE a.cf$_sales_part_no = :1)
+                 AND fee_code IN
+                     (SELECT b.cf$_tax_code
+                        FROM cust_applicable_tax_code_clv b
+                       WHERE b.cf$_company = :2
+                         AND b.cf$_customer = :3)
+                 AND COMPANY = :4)';
+      IF Database_SYS.View_Exist('SALES_PART_TAX_CODE_CLV') AND Database_SYS.View_Exist('CUST_APPLICABLE_TAX_CODE_CLV') THEN
+         EXECUTE IMMEDIATE stmt_    
+            INTO allowed_tax_codes_
+           USING catalog_no_,company_,customer_,company_;
+      END IF;          
+      RETURN allowed_tax_codes_;
+   EXCEPTION
+      WHEN OTHERS THEN
+         RETURN NULL;
+   END Get_Allowed_Tax_Codes__;
 
   FUNCTION Transf_Mansup_Attach_To_PO(target_key_ref_ IN VARCHAR2,
                                       service_name_   IN VARCHAR2)
