@@ -114,9 +114,10 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
   FUNCTION Check_Cause_Discount(wo_no_ IN VARCHAR2, type_ varchar2)
     return VARCHAR2;
 
-  FUNCTION Get_Allowed_Tax_Codes__(company_    IN VARCHAR2,
-                                   customer_   IN VARCHAR2,
-                                   catalog_no_ IN VARCHAR2) RETURN VARCHAR2;
+  FUNCTION Get_Allowed_Tax_Codes__(
+      company_    IN VARCHAR2,  
+      customer_   IN VARCHAR2,
+      catalog_no_ IN VARCHAR2) RETURN VARCHAR2;
 
   FUNCTION Transf_Mansup_Attach_To_PO(target_key_ref_ IN VARCHAR2,
                                       service_name_   IN VARCHAR2)
