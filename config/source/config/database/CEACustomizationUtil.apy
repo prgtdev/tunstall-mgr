@@ -9,7 +9,6 @@
 --  Date     Sign    History
 --  ------   ------  --------------------------------------------------
 --  210422   EA      Created
---  -- test
 --  ------   ------  --------------------------------------------------
 -----------------------------------------------------------------------------
 
@@ -1803,7 +1802,93 @@ FUNCTION Check_Cause_Discount(wo_no_ IN VARCHAR2, type_ IN varchar2) return VARC
     END LOOP;
        RETURN temp_;
    END Check_Inv_Header_CA;
-
+   
+    FUNCTION Get_Largest_Overdue_Debt(identity_ IN VARCHAR2, company_ IN VARCHAR2) return VARCHAR2
+ IS
+ 
+ temp_ NUMBER;
+ 
+  CURSOR get_inv_info(company_ varchar2, identity_ varchar2)IS
+  SELECT  MAX(OPEN_AMOUNT)
+  FROM INVOICE_LEDGER_ITEM_CU_QRY
+  WHERE COMPANY =company_
+  AND IDENTITY = identity_
+  AND INV_STATE NOT IN ('Preliminary', 'Canceled', 'PaidPosted')
+  AND DUE_DATE< SYSDATE ;
+  
+ BEGIN
+   OPEN get_inv_info (company_,identity_);
+   FETCH get_inv_info INTO temp_;
+   CLOSE get_inv_info;
+   
+   RETURN temp_;
+ END  Get_Largest_Overdue_Debt;
+ 
+     
+  FUNCTION Get_Oldest_Overdue_Debt(identity_ IN VARCHAR2, company_ IN VARCHAR2) return VARCHAR2
+ IS
+ 
+ temp_ NUMBER;
+ 
+  CURSOR get_inv_info(company_ varchar2, identity_ varchar2)IS 
+  SELECT * FROM ( 
+  SELECT OPEN_AMOUNT
+  FROM INVOICE_LEDGER_ITEM_CU_QRY
+  WHERE COMPANY =company_
+  AND IDENTITY = identity_  
+  AND INV_STATE NOT IN ('Preliminary', 'Canceled', 'PaidPosted')
+  AND DUE_DATE in (SELECT min(DUE_DATE)  FROM INVOICE_LEDGER_ITEM_CU_QRY
+  WHERE COMPANY =company_
+  AND IDENTITY = identity_
+  AND INV_STATE NOT IN ('Preliminary', 'Canceled', 'PaidPosted')
+  AND DUE_DATE <SYSDATE
+  AND OPEN_AMOUNT>0
+  )order by open_amount desc
+  ) WHERE ROWNUM= 1
+  ;
+  
+  
+ BEGIN
+   OPEN get_inv_info (company_,identity_);
+   FETCH get_inv_info INTO temp_;
+   CLOSE get_inv_info;
+   
+   RETURN temp_;
+ END  Get_Oldest_Overdue_Debt;
+ 
+ FUNCTION Get_Oldest_Followup_Date(identity_ IN VARCHAR2, company_ IN VARCHAR2) return VARCHAR2
+ IS
+ 
+ temp_ DATE;
+ 
+    CURSOR get_inv_info(company_ varchar2, identity_ varchar2)IS 
+    SELECT  MIN(FOLLOW_UP_DATE) from 
+    INVOICE_HEADER_NOTES
+    WHERE INVOICE_ID IN (
+    SELECT * FROM ( 
+    SELECT INVOICE_ID FROM  invoice_tab t
+    WHERE  party_type = 'CUSTOMER'
+    AND    EXISTS (SELECT 1 FROM user_finance_auth_pub WHERE t.company = company_)
+    AND  identity=identity_
+    AND company = company_
+    AND exists ( SELECT 1 
+                  FROM INVOICE_LEDGER_ITEM_CU_QRY
+                  WHERE COMPANY =company_
+                  AND IDENTITY = identity_
+                  AND INVOICE_ID = t.invoice_id 
+                  AND INV_STATE NOT IN ('Preliminary', 'Canceled', 'PaidPosted')
+                  and DUE_DATE<sysdate
+                  )
+    order by creation_date desc   
+    ) where rownum=1  
+    )    ;       
+ BEGIN
+   OPEN get_inv_info (company_,identity_);
+   FETCH get_inv_info INTO temp_;
+   CLOSE get_inv_info;
+   
+   RETURN temp_;
+ END  Get_Oldest_Followup_Date;
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------
 -----------------------------------------------------------------------------
