@@ -1541,18 +1541,18 @@ FUNCTION Check_Cause_Discount(wo_no_ IN VARCHAR2, type_ IN varchar2) return VARC
 
     IF sales_contract_site_rec_.CF$_CONTRACT_NO IS NULL THEN
       Error_SYS.Appl_General('Custom',
-                             'ERROR_NO_INSTALLATION_SITE: Installation site :P1 is not found in installation sites of the connected Sales Contract items',
+                             'ERROR_NO_INSTALLATION_SITE: Installation site :P1 is not found in installation sites of the connected sales contract',
                              installation_site_);
     END IF;
 
     IF hand_over_date_ IS NULL THEN
       Error_SYS.Appl_General('Custom',
-                             'ERROR_COMPLETE_DATE: Completion/Handover date of the installation site of connected Sales Contract items is empty');
+                             'ERROR_COMPLETE_DATE: Completion/Handover date of the installation site of connected sales contract is empty');
     END IF;
 
     IF warranty_period_ IS NULL THEN
       Error_SYS.Appl_General('Custom',
-                             'ERROR_WARRANTY_PERIOD: Warranty Period of the installation site of connected Sales Contract items is empty');
+                             'ERROR_WARRANTY_PERIOD: Warranty Period of the installation site of connected sales contract is empty');
     END IF;
     warranty_period_objkey_ := Get_Service_warranty_Objkey___(warranty_period_);
 
