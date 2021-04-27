@@ -106,8 +106,9 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
                           month_   IN VARCHAR2,
                           week_    IN VARCHAR2) RETURN DATE DETERMINISTIC;
 
-  PROCEDURE Copy_Circuit_Reference__(part_no_  IN VARCHAR2,
-                                     part_rev_ IN VARCHAR2);
+   PROCEDURE Copy_Circuit_Reference__(
+      part_no_  IN VARCHAR2,
+      part_rev_ IN VARCHAR2);
 
   PROCEDURE Close_Non_Finance_User_Group;
 
