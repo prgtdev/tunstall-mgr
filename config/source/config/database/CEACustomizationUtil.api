@@ -96,15 +96,17 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
                                            resource_id_     IN VARCHAR2 DEFAULT NULL)
     RETURN NUMBER;
 
-  FUNCTION Get_Begin_Date__(year_    IN VARCHAR2,
-                            quarter_ IN VARCHAR2,
-                            month_   IN VARCHAR2,
-                            week_    IN VARCHAR2) RETURN DATE DETERMINISTIC;
+   FUNCTION Get_Begin_Date__(
+      year_    IN VARCHAR2,
+      quarter_ IN VARCHAR2,
+      month_   IN VARCHAR2,
+      week_    IN VARCHAR2) RETURN DATE DETERMINISTIC;
 
-  FUNCTION Get_End_Date__(year_    IN VARCHAR2,
-                          quarter_ IN VARCHAR2,
-                          month_   IN VARCHAR2,
-                          week_    IN VARCHAR2) RETURN DATE DETERMINISTIC;
+   FUNCTION Get_End_Date__(
+      year_    IN VARCHAR2,
+      quarter_ IN VARCHAR2,
+      month_   IN VARCHAR2,
+      week_    IN VARCHAR2) RETURN DATE DETERMINISTIC;
 
    PROCEDURE Copy_Circuit_Reference__(
       part_no_  IN VARCHAR2,
