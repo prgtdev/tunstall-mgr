@@ -913,91 +913,150 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
     RETURN task_closed_percentage_;
   END Get_First_Time_Fix_Percentage__;
 
-  FUNCTION Get_Begin_Date__(year_    IN VARCHAR2,
-                            quarter_ IN VARCHAR2,
-                            month_   IN VARCHAR2,
-                            week_    IN VARCHAR2) RETURN DATE DETERMINISTIC IS
-  BEGIN
-    IF year_ IS NOT NULL THEN
-      IF quarter_ IS NOT NULL THEN
-        CASE quarter_
-          WHEN '1' THEN
-            RETURN TO_DATE('01/01/2020', 'dd/mm/yyyy');
-          WHEN '2' THEN
-            RETURN TO_DATE('01/04/2020', 'dd/mm/yyyy');
-          WHEN '3' THEN
-            RETURN TO_DATE('01/07/2020', 'dd/mm/yyyy');
-          WHEN '4' THEN
-            RETURN TO_DATE('01/10/2020', 'dd/mm/yyyy');
-          ELSE
-            Error_SYS.Appl_General('Error',
-                                   'INVALID_FORMAT: Invalid Quater Value!');
-        END CASE;
+   FUNCTION Get_Begin_Date__(
+      year_    IN VARCHAR2,
+      quarter_ IN VARCHAR2,
+      month_   IN VARCHAR2,
+      week_    IN VARCHAR2) RETURN DATE DETERMINISTIC
+   IS
+      FUNCTION Get_Week_Start___(
+         year_    IN VARCHAR2, 
+         week_no_ IN VARCHAR2) RETURN DATE DETERMINISTIC
+      IS
+         week_start_date_ DATE;
+      BEGIN
+         SELECT MIN(dt)
+         INTO week_start_date_
+         FROM (SELECT dt, to_char(dt + 1, 'iw') week_no
+            FROM (SELECT add_months(to_date('31/12/'||year_, 'dd/mm/yyyy'),-12) + ROWNUM dt
+                    FROM all_objects
+                   WHERE ROWNUM < 366))
+                   WHERE week_no = TO_NUMBER(week_no_);
+         RETURN week_start_date_;
+      END Get_Week_Start___;   
+   BEGIN
+      IF year_ IS NOT NULL OR year_ != '' THEN
+         IF REGEXP_LIKE(year_, '^[[:digit:]]+$') THEN
+            IF quarter_ IS NOT NULL OR quarter_ != '' THEN
+               CASE quarter_
+                  WHEN '1' THEN
+                     RETURN TO_DATE('01/01/2020', 'dd/mm/yyyy');
+                  WHEN '2' THEN
+                     RETURN TO_DATE('01/04/2020', 'dd/mm/yyyy');
+                  WHEN '3' THEN
+                     RETURN TO_DATE('01/07/2020', 'dd/mm/yyyy');
+                  WHEN '4' THEN
+                     RETURN TO_DATE('01/10/2020', 'dd/mm/yyyy');
+            ELSE
+               Error_SYS.Appl_General('Error','INVALID_FORMAT: Invalid Quater Value!');
+               END CASE;
+            ELSE
+               IF month_ IS NOT NULL OR month_ != '' THEN
+                  IF REGEXP_LIKE(month_, '^[[:digit:]]+$') THEN
+                     RETURN TO_DATE('01/' || month_ || '/' || year_, 'dd/mm/yyyy');
+                  ELSE
+                     Error_SYS.Appl_General('Error','INVALID_FORMAT: Invalid Month Value!');
+                 END IF;
+               ELSE
+                  IF week_ IS NOT NULL OR week_ != '' THEN
+                     IF REGEXP_LIKE(week_, '^[[:digit:]]+$') THEN
+                        RETURN Get_Week_Start___(year_,week_);
+                     ELSE
+                        Error_SYS.Appl_General('Error','INVALID_FORMAT: Invalid Week Value!');
+                     END IF;
+                  END IF;
+               END IF;
+            END IF;
+            RETURN TO_DATE('01/01/' || year_, 'dd/mm/yyyy');
+         ELSE
+            Error_SYS.Appl_General('Error','INVALID_FORMAT: Invalid Year Value!');
+         END IF;
       ELSE
-        IF month_ IS NOT NULL THEN
-          RETURN TO_DATE('01/' || month_ || '/' || year_, 'dd/mm/yyyy');
-        ELSE
-          IF week_ IS NOT NULL THEN
-            RETURN trunc(SYSDATE, 'iw') - 7 *(to_number(to_char(trunc(SYSDATE),
-                                                                'iw')) -
-                                              week_);
-          END IF;
-        END IF;
+         RETURN TO_DATE('01/01/1900', 'dd/mm/yyyy');
       END IF;
-      RETURN TO_DATE('01/01/' || year_, 'dd/mm/yyyy');
-    ELSE
-      RETURN TO_DATE('01/01/1900', 'dd/mm/yyyy');
-    END IF;
-  END Get_Begin_Date__;
+   END Get_Begin_Date__;
 
-  FUNCTION Get_End_Date__(year_    IN VARCHAR2,
-                          quarter_ IN VARCHAR2,
-                          month_   IN VARCHAR2,
-                          week_    IN VARCHAR2) RETURN DATE DETERMINISTIC IS
-  BEGIN
-    IF year_ IS NOT NULL THEN
-      IF quarter_ IS NOT NULL THEN
-        CASE quarter_
-          WHEN '1' THEN
-            RETURN add_months(last_day(trunc(to_date('01/01/2020',
-                                                     'dd/mm/yyyy'),
-                                             'Q')),
-                              2);
-          WHEN '2' THEN
-            RETURN add_months(last_day(trunc(to_date('01/04/2020',
-                                                     'dd/mm/yyyy'),
-                                             'Q')),
-                              2);
-          WHEN '3' THEN
-            RETURN add_months(last_day(trunc(to_date('01/07/2020',
-                                                     'dd/mm/yyyy'),
-                                             'Q')),
-                              2);
-          WHEN '4' THEN
-            RETURN add_months(last_day(trunc(to_date('01/10/2020',
-                                                     'dd/mm/yyyy'),
-                                             'Q')),
-                              2);
-          ELSE
-            Error_SYS.Appl_General('Error',
-                                   'INVALID_FORMAT: Invalid Quater Value!');
-        END CASE;
+   FUNCTION Get_End_Date__(
+      year_    IN VARCHAR2,
+      quarter_ IN VARCHAR2,
+      month_   IN VARCHAR2,
+      week_    IN VARCHAR2) RETURN DATE DETERMINISTIC 
+   IS
+      FUNCTION Get_Week_End___(
+         year_    IN VARCHAR2, 
+         week_no_ IN VARCHAR2) RETURN DATE DETERMINISTIC
+      IS
+         week_end_date_ DATE;
+      BEGIN
+         SELECT MAX(dt)
+         INTO week_end_date_
+         FROM (SELECT dt, to_char(dt + 1, 'iw') week_no
+            FROM (SELECT add_months(to_date('31/12/'||year_, 'dd/mm/yyyy'),-12) + ROWNUM dt
+               FROM all_objects
+               WHERE ROWNUM < 366))
+               WHERE week_no = TO_NUMBER(week_no_);
+         RETURN week_end_date_;
+      END Get_Week_End___;
+      
+      FUNCTION End_Of_Date_Time___(
+         date_ DATE) RETURN DATE
+      IS
+      BEGIN
+         RETURN date_ + 86399/86400;
+      END End_Of_Date_Time___; 
+   BEGIN
+      IF year_ IS NOT NULL OR year_ != '' THEN
+         IF REGEXP_LIKE(year_, '^[[:digit:]]+$') THEN
+            IF quarter_ IS NOT NULL OR quarter_ != '' THEN
+               CASE quarter_
+                  WHEN '1' THEN
+                     RETURN End_Of_Date_Time___(add_months(last_day(trunc(to_date('01/01/2020',
+                                                                                  'dd/mm/yyyy'),
+                                                                                  'Q')),
+                                                                                  2));
+                  WHEN '2' THEN
+                     RETURN End_Of_Date_Time___(add_months(last_day(trunc(to_date('01/04/2020',
+                                                                                  'dd/mm/yyyy'),
+                                                                                  'Q')),
+                                                                                  2));
+                  WHEN '3' THEN
+                     RETURN End_Of_Date_Time___(add_months(last_day(trunc(to_date('01/07/2020',
+                                                                                  'dd/mm/yyyy'),
+                                                                                  'Q')),
+                                                                                  2));
+                  WHEN '4' THEN
+                     RETURN End_Of_Date_Time___(add_months(last_day(trunc(to_date('01/10/2020',
+                                                                                  'dd/mm/yyyy'),
+                                                                                  'Q')),
+                                                                                  2));
+            ELSE
+               Error_SYS.Appl_General('Error','INVALID_FORMAT: Invalid Quater Value!');
+               END CASE;
+            ELSE
+               IF month_ IS NOT NULL OR month_ != '' THEN
+                  IF REGEXP_LIKE(month_, '^[[:digit:]]+$') THEN
+                     RETURN End_Of_Date_Time___(LAST_DAY(TO_DATE('01/' || month_ || '/' || year_,'dd/mm/yyyy')));
+                  ELSE
+                     Error_SYS.Appl_General('Error','INVALID_FORMAT: Invalid Month Value!');
+                  END IF;
+               ELSE
+                  IF week_ IS NOT NULL OR month_ != '' THEN
+                     IF REGEXP_LIKE(week_, '^[[:digit:]]+$') THEN
+                        RETURN End_Of_Date_Time___(Get_Week_End___(year_,week_));
+                     ELSE
+                        Error_SYS.Appl_General('Error','INVALID_FORMAT: Invalid Week Value!');
+                     END IF;
+                  END IF;
+               END IF;
+            END IF;
+            RETURN End_Of_Date_Time___(TO_DATE('31/12/' || year_, 'dd/mm/yyyy'));
+         ELSE
+            Error_SYS.Appl_General('Error','INVALID_FORMAT: Invalid Year Value!');
+         END IF;
       ELSE
-        IF month_ IS NOT NULL THEN
-          RETURN LAST_DAY(TO_DATE('01/' || month_ || '/' || year_,
-                                  'dd/mm/yyyy'));
-        ELSE
-          IF week_ IS NOT NULL THEN
-            RETURN(trunc(SYSDATE, 'iw') -
-                   7 * (to_number(to_char(trunc(SYSDATE), 'iw')) - week_)) + 6;
-          END IF;
-        END IF;
+         RETURN End_Of_Date_Time___(TO_DATE('31/12/9999', 'dd/mm/yyyy'));
       END IF;
-      RETURN TO_DATE('31/12/' || year_, 'dd/mm/yyyy');
-    ELSE
-      RETURN SYSDATE;
-    END IF;
-  END Get_End_Date__;
+   END Get_End_Date__;
 
    PROCEDURE Copy_Circuit_Reference__(
       part_no_  IN VARCHAR2,
