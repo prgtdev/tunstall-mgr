@@ -197,19 +197,14 @@ IS
    par_task_line_ binds$;
    created_date_             DATE;
    use_by_date_              DATE;
-   --no_of_after_days_         NUMBER;
-   
+   stmt_                     VARCHAR2(4000);
+   TYPE Get_Use_By_Date IS REF CURSOR;
+   get_use_by_date_          Get_Use_By_Date;
+ 
    CURSOR get_created_date(transport_task_id_ NUMBER) IS
       SELECT create_date
       FROM TRANSPORT_TASK
       WHERE transport_task_id = transport_task_id_;
-   
-   CURSOR get_use_by_date(part_no_ VARCHAR2, created_date_ DATE) IS
-      SELECT TO_DATE(created_date_, 'DD/MM/YYYY') + cf$_after_days  
-      FROM M_S_L_TYPE_MAINTENANCE_CLV 
-      WHERE cf$_msl_level = (SELECT cf$_msl_level 
-                             FROM PART_CATALOG_CFV 
-                             WHERE part_no = part_no_);
 BEGIN
    General_SYS.Init_Method(lu_name_, 'MSL_RPI', 'Execute_Report');
    result_key$_                 := Client_SYS.Attr_Value_To_Number(Client_SYS.Get_Item_Value('RESULT_KEY', report_attr_));
@@ -238,9 +233,19 @@ BEGIN
       Xml_Record_Writer_SYS.Add_Element(xml$_, 'LINE_LOT_BATCH_NO', rec_task_line_.line_lot_batch_no);
       Xml_Record_Writer_SYS.Add_Element(xml$_, 'LINE_QUANTITY', rec_task_line_.line_quantity);
       
-      OPEN  get_use_by_date(rec_task_line_.line_part_no, created_date_);
-      FETCH get_use_by_date INTO use_by_date_;
-      CLOSE get_use_by_date; 
+      stmt_ := 'SELECT TO_DATE(:created_date_, ''DD/MM/YY'') + cf$_after_days ' ||  
+               'FROM M_S_L_TYPE_MAINTENANCE_CLV '|| 
+               'WHERE cf$_msl_level = (SELECT cf$_msl_level '|| 
+                                     ' FROM PART_CATALOG_CFV '||
+                                     ' WHERE part_no = :part_no_)';
+                                 
+      --@ApproveDynamicStatement('2021-05-06',eamaheshi);
+      OPEN get_use_by_date_ FOR stmt_ USING created_date_,rec_task_line_.line_part_no;
+      LOOP 
+         FETCH get_use_by_date_ INTO use_by_date_;
+         EXIT WHEN get_use_by_date_%NOTFOUND;
+      END LOOP;
+      CLOSE get_use_by_date_; 
       
       Xml_Record_Writer_SYS.Add_Element(xml$_, 'USE_BY_DATE', use_by_date_);
       Xml_Record_Writer_SYS.Add_Custom_Fields(xml$_, 'TransportTaskLine', rec_task_line_.rowkey, 'MSL_REP'); 
