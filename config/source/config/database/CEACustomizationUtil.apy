@@ -913,180 +913,245 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
     RETURN task_closed_percentage_;
   END Get_First_Time_Fix_Percentage__;
 
-  FUNCTION Get_Begin_Date__(year_    IN VARCHAR2,
-                            quarter_ IN VARCHAR2,
-                            month_   IN VARCHAR2,
-                            week_    IN VARCHAR2) RETURN DATE DETERMINISTIC IS
-  BEGIN
-    IF year_ IS NOT NULL THEN
-      IF quarter_ IS NOT NULL THEN
-        CASE quarter_
-          WHEN '1' THEN
-            RETURN TO_DATE('01/01/2020', 'dd/mm/yyyy');
-          WHEN '2' THEN
-            RETURN TO_DATE('01/04/2020', 'dd/mm/yyyy');
-          WHEN '3' THEN
-            RETURN TO_DATE('01/07/2020', 'dd/mm/yyyy');
-          WHEN '4' THEN
-            RETURN TO_DATE('01/10/2020', 'dd/mm/yyyy');
-          ELSE
-            Error_SYS.Appl_General('Error',
-                                   'INVALID_FORMAT: Invalid Quater Value!');
-        END CASE;
+   FUNCTION Get_Begin_Date__(
+      year_    IN VARCHAR2,
+      quarter_ IN VARCHAR2,
+      month_   IN VARCHAR2,
+      week_    IN VARCHAR2) RETURN DATE DETERMINISTIC
+   IS
+      FUNCTION Get_Week_Start___(
+         year_    IN VARCHAR2, 
+         week_no_ IN VARCHAR2) RETURN DATE DETERMINISTIC
+      IS
+         week_start_date_ DATE;
+      BEGIN
+         SELECT MIN(dt)
+         INTO week_start_date_
+         FROM (SELECT dt, to_char(dt + 1, 'iw') week_no
+            FROM (SELECT add_months(to_date('31/12/'||year_, 'dd/mm/yyyy'),-12) + ROWNUM dt
+                    FROM all_objects
+                   WHERE ROWNUM < 366))
+                   WHERE week_no = TO_NUMBER(week_no_);
+         RETURN week_start_date_;
+      END Get_Week_Start___;   
+   BEGIN
+      IF year_ IS NOT NULL OR year_ != '' THEN
+         IF REGEXP_LIKE(year_, '^[[:digit:]]+$') THEN
+            IF quarter_ IS NOT NULL OR quarter_ != '' THEN
+               CASE quarter_
+                  WHEN '1' THEN
+                     RETURN TO_DATE('01/01/2020', 'dd/mm/yyyy');
+                  WHEN '2' THEN
+                     RETURN TO_DATE('01/04/2020', 'dd/mm/yyyy');
+                  WHEN '3' THEN
+                     RETURN TO_DATE('01/07/2020', 'dd/mm/yyyy');
+                  WHEN '4' THEN
+                     RETURN TO_DATE('01/10/2020', 'dd/mm/yyyy');
+            ELSE
+               Error_SYS.Appl_General('Error','INVALID_FORMAT: Invalid Quater Value!');
+               END CASE;
+            ELSE
+               IF month_ IS NOT NULL OR month_ != '' THEN
+                  IF REGEXP_LIKE(month_, '^[[:digit:]]+$') THEN
+                     RETURN TO_DATE('01/' || month_ || '/' || year_, 'dd/mm/yyyy');
+                  ELSE
+                     Error_SYS.Appl_General('Error','INVALID_FORMAT: Invalid Month Value!');
+                 END IF;
+               ELSE
+                  IF week_ IS NOT NULL OR week_ != '' THEN
+                     IF REGEXP_LIKE(week_, '^[[:digit:]]+$') THEN
+                        RETURN Get_Week_Start___(year_,week_);
+                     ELSE
+                        Error_SYS.Appl_General('Error','INVALID_FORMAT: Invalid Week Value!');
+                     END IF;
+                  END IF;
+               END IF;
+            END IF;
+            RETURN TO_DATE('01/01/' || year_, 'dd/mm/yyyy');
+         ELSE
+            Error_SYS.Appl_General('Error','INVALID_FORMAT: Invalid Year Value!');
+         END IF;
       ELSE
-        IF month_ IS NOT NULL THEN
-          RETURN TO_DATE('01/' || month_ || '/' || year_, 'dd/mm/yyyy');
-        ELSE
-          IF week_ IS NOT NULL THEN
-            RETURN trunc(SYSDATE, 'iw') - 7 *(to_number(to_char(trunc(SYSDATE),
-                                                                'iw')) -
-                                              week_);
-          END IF;
-        END IF;
+         RETURN TO_DATE('01/01/1900', 'dd/mm/yyyy');
       END IF;
-      RETURN TO_DATE('01/01/' || year_, 'dd/mm/yyyy');
-    ELSE
-      RETURN TO_DATE('01/01/1900', 'dd/mm/yyyy');
-    END IF;
-  END Get_Begin_Date__;
+   END Get_Begin_Date__;
 
-  FUNCTION Get_End_Date__(year_    IN VARCHAR2,
-                          quarter_ IN VARCHAR2,
-                          month_   IN VARCHAR2,
-                          week_    IN VARCHAR2) RETURN DATE DETERMINISTIC IS
-  BEGIN
-    IF year_ IS NOT NULL THEN
-      IF quarter_ IS NOT NULL THEN
-        CASE quarter_
-          WHEN '1' THEN
-            RETURN add_months(last_day(trunc(to_date('01/01/2020',
-                                                     'dd/mm/yyyy'),
-                                             'Q')),
-                              2);
-          WHEN '2' THEN
-            RETURN add_months(last_day(trunc(to_date('01/04/2020',
-                                                     'dd/mm/yyyy'),
-                                             'Q')),
-                              2);
-          WHEN '3' THEN
-            RETURN add_months(last_day(trunc(to_date('01/07/2020',
-                                                     'dd/mm/yyyy'),
-                                             'Q')),
-                              2);
-          WHEN '4' THEN
-            RETURN add_months(last_day(trunc(to_date('01/10/2020',
-                                                     'dd/mm/yyyy'),
-                                             'Q')),
-                              2);
-          ELSE
-            Error_SYS.Appl_General('Error',
-                                   'INVALID_FORMAT: Invalid Quater Value!');
-        END CASE;
+   FUNCTION Get_End_Date__(
+      year_    IN VARCHAR2,
+      quarter_ IN VARCHAR2,
+      month_   IN VARCHAR2,
+      week_    IN VARCHAR2) RETURN DATE DETERMINISTIC 
+   IS
+      FUNCTION Get_Week_End___(
+         year_    IN VARCHAR2, 
+         week_no_ IN VARCHAR2) RETURN DATE DETERMINISTIC
+      IS
+         week_end_date_ DATE;
+      BEGIN
+         SELECT MAX(dt)
+         INTO week_end_date_
+         FROM (SELECT dt, to_char(dt + 1, 'iw') week_no
+            FROM (SELECT add_months(to_date('31/12/'||year_, 'dd/mm/yyyy'),-12) + ROWNUM dt
+               FROM all_objects
+               WHERE ROWNUM < 366))
+               WHERE week_no = TO_NUMBER(week_no_);
+         RETURN week_end_date_;
+      END Get_Week_End___;
+      
+      FUNCTION End_Of_Date_Time___(
+         date_ DATE) RETURN DATE
+      IS
+      BEGIN
+         RETURN date_ + 86399/86400;
+      END End_Of_Date_Time___; 
+   BEGIN
+      IF year_ IS NOT NULL OR year_ != '' THEN
+         IF REGEXP_LIKE(year_, '^[[:digit:]]+$') THEN
+            IF quarter_ IS NOT NULL OR quarter_ != '' THEN
+               CASE quarter_
+                  WHEN '1' THEN
+                     RETURN End_Of_Date_Time___(add_months(last_day(trunc(to_date('01/01/2020',
+                                                                                  'dd/mm/yyyy'),
+                                                                                  'Q')),
+                                                                                  2));
+                  WHEN '2' THEN
+                     RETURN End_Of_Date_Time___(add_months(last_day(trunc(to_date('01/04/2020',
+                                                                                  'dd/mm/yyyy'),
+                                                                                  'Q')),
+                                                                                  2));
+                  WHEN '3' THEN
+                     RETURN End_Of_Date_Time___(add_months(last_day(trunc(to_date('01/07/2020',
+                                                                                  'dd/mm/yyyy'),
+                                                                                  'Q')),
+                                                                                  2));
+                  WHEN '4' THEN
+                     RETURN End_Of_Date_Time___(add_months(last_day(trunc(to_date('01/10/2020',
+                                                                                  'dd/mm/yyyy'),
+                                                                                  'Q')),
+                                                                                  2));
+            ELSE
+               Error_SYS.Appl_General('Error','INVALID_FORMAT: Invalid Quater Value!');
+               END CASE;
+            ELSE
+               IF month_ IS NOT NULL OR month_ != '' THEN
+                  IF REGEXP_LIKE(month_, '^[[:digit:]]+$') THEN
+                     RETURN End_Of_Date_Time___(LAST_DAY(TO_DATE('01/' || month_ || '/' || year_,'dd/mm/yyyy')));
+                  ELSE
+                     Error_SYS.Appl_General('Error','INVALID_FORMAT: Invalid Month Value!');
+                  END IF;
+               ELSE
+                  IF week_ IS NOT NULL OR month_ != '' THEN
+                     IF REGEXP_LIKE(week_, '^[[:digit:]]+$') THEN
+                        RETURN End_Of_Date_Time___(Get_Week_End___(year_,week_));
+                     ELSE
+                        Error_SYS.Appl_General('Error','INVALID_FORMAT: Invalid Week Value!');
+                     END IF;
+                  END IF;
+               END IF;
+            END IF;
+            RETURN End_Of_Date_Time___(TO_DATE('31/12/' || year_, 'dd/mm/yyyy'));
+         ELSE
+            Error_SYS.Appl_General('Error','INVALID_FORMAT: Invalid Year Value!');
+         END IF;
       ELSE
-        IF month_ IS NOT NULL THEN
-          RETURN LAST_DAY(TO_DATE('01/' || month_ || '/' || year_,
-                                  'dd/mm/yyyy'));
-        ELSE
-          IF week_ IS NOT NULL THEN
-            RETURN(trunc(SYSDATE, 'iw') -
-                   7 * (to_number(to_char(trunc(SYSDATE), 'iw')) - week_)) + 6;
-          END IF;
-        END IF;
+         RETURN End_Of_Date_Time___(TO_DATE('31/12/9999', 'dd/mm/yyyy'));
       END IF;
-      RETURN TO_DATE('31/12/' || year_, 'dd/mm/yyyy');
-    ELSE
-      RETURN SYSDATE;
-    END IF;
-  END Get_End_Date__;
+   END Get_End_Date__;
 
-  PROCEDURE Copy_Circuit_Reference__(part_no_  IN VARCHAR2,
-                                     part_rev_ IN VARCHAR2) IS
-    sub_part_no_  VARCHAR2(20);
-    sub_part_rev_ VARCHAR2(20);
-    structure_id_ VARCHAR2(20);
-    pos_          VARCHAR2(20);
+   PROCEDURE Copy_Circuit_Reference__(
+      part_no_  IN VARCHAR2,
+      part_rev_ IN VARCHAR2) 
+   IS
+      sub_part_no_  VARCHAR2(20);
+      sub_part_rev_ VARCHAR2(20);
+      structure_id_ VARCHAR2(20);
+      pos_          VARCHAR2(20);
   
-    objkey_        VARCHAR2(50);
-    source_objkey_ VARCHAR2(50);
+      objkey_        VARCHAR2(50);
+      source_objkey_ VARCHAR2(50);
   
-    PROCEDURE Remove_Copy_Circuit_Ref_Flag___(objkey_ IN VARCHAR2) IS
-    BEGIN
-      UPDATE eng_part_structure_cft
-         SET cf$_copy_circuit_reference = NULL
-       WHERE rowkey = objkey_;
-    END Remove_Copy_Circuit_Ref_Flag___;
+      PROCEDURE Remove_Copy_Circuit_Ref_Flag___(
+         objkey_ IN VARCHAR2) 
+      IS
+      BEGIN
+         UPDATE eng_part_structure_cft
+            SET cf$_copy_circuit_reference = NULL
+          WHERE rowkey = objkey_;
+      END Remove_Copy_Circuit_Ref_Flag___;
   
-    PROCEDURE Copy_Circuit_Reference___(objkey_      IN VARCHAR2,
-                                        circuit_ref_ IN VARCHAR2) IS
-      info_    VARCHAR2(4000);
-      objid_   VARCHAR2(200);
-      attr_cf_ VARCHAR2(4000);
-      rec_     Eng_Part_Structure_API.Public_Rec;
-    BEGIN
-      rec_   := Eng_Part_Structure_API.Get_By_Rowkey(objkey_);
-      objid_ := rec_."rowid";
-    
-      Client_SYS.Clear_Attr(attr_cf_);
-      Client_SYS.Add_To_Attr('CF$_CIRCUIT_REF', circuit_ref_, attr_cf_);
-    
-      Eng_Part_Structure_CFP.Cf_New__(info_, objid_, attr_cf_, '', 'DO');
-    END Copy_Circuit_Reference___;
+      PROCEDURE Copy_Circuit_Reference___(
+         objkey_      IN VARCHAR2,
+         circuit_ref_ IN VARCHAR2) 
+      IS
+         info_    VARCHAR2(4000);
+         objid_   VARCHAR2(200);
+         attr_cf_ VARCHAR2(4000);
+         rec_     Eng_Part_Structure_API.Public_Rec;
+      BEGIN
+         rec_   := Eng_Part_Structure_API.Get_By_Rowkey(objkey_);
+         objid_ := rec_."rowid";
+
+         Client_SYS.Clear_Attr(attr_cf_);
+         Client_SYS.Add_To_Attr('CF$_CIRCUIT_REF', circuit_ref_, attr_cf_);
+
+         Eng_Part_Structure_CFP.Cf_New__(info_, objid_, attr_cf_, '', 'DO');
+      END Copy_Circuit_Reference___;
   
-    FUNCTION Get_Source_Eng_Part_Struc_Objkey___(part_no_      IN VARCHAR2,
-                                                 sub_part_no_  IN VARCHAR2,
-                                                 sub_part_rev_ IN VARCHAR2,
-                                                 structure_id_ IN VARCHAR2,
-                                                 pos_          IN VARCHAR2)
-      RETURN VARCHAR2 IS
-      objkey_ VARCHAR2(50);
-    BEGIN
-      SELECT objkey
-        INTO objkey_
-        FROM eng_part_structure_ext_cfv
-       WHERE part_no = part_no_
-         AND sub_part_no = sub_part_no_
-         AND sub_part_rev = sub_part_rev_
-         AND structure_id = structure_id_
-         AND pos = pos_
-         AND cf$_copy_circuit_reference_db = 'TRUE';
+      FUNCTION Get_Source_Eng_Part_Struc_Objkey___(
+         part_no_      IN VARCHAR2,
+         sub_part_no_  IN VARCHAR2,
+         sub_part_rev_ IN VARCHAR2,
+         structure_id_ IN VARCHAR2,
+         pos_          IN VARCHAR2) RETURN VARCHAR2 
+      IS
+         objkey_ VARCHAR2(50);
+      BEGIN
+         SELECT objkey
+           INTO objkey_
+           FROM eng_part_structure_ext_cfv
+          WHERE part_no = part_no_
+            AND sub_part_no = sub_part_no_
+            AND sub_part_rev = sub_part_rev_
+            AND structure_id = structure_id_
+            AND pos = pos_
+            AND cf$_copy_circuit_reference_db = 'TRUE';
       RETURN objkey_;
-    EXCEPTION
-      WHEN OTHERS THEN
-        RETURN NULL;
-    END Get_Source_Eng_Part_Struc_Objkey___;
-  BEGIN
-    FOR rec_ IN (SELECT *
-                   FROM eng_part_structure_ext
-                  WHERE PART_NO = part_no_
-                    AND PART_REV = part_rev_) LOOP
-      sub_part_no_  := rec_.sub_part_no;
-      sub_part_rev_ := rec_.sub_part_rev;
-      structure_id_ := rec_.structure_id;
-      pos_          := rec_.pos;
+      EXCEPTION
+         WHEN OTHERS THEN
+           RETURN NULL;
+      END Get_Source_Eng_Part_Struc_Objkey___;
+   BEGIN
+      FOR rec_ IN (SELECT *
+                     FROM eng_part_structure_ext
+                    WHERE part_no = part_no_
+                      AND part_rev = part_rev_) LOOP
+         sub_part_no_  := rec_.sub_part_no;
+         sub_part_rev_ := rec_.sub_part_rev;
+         structure_id_ := rec_.structure_id;
+         pos_          := rec_.pos;
     
-      objkey_ := Eng_Part_Structure_API.Get_Objkey(part_no_,
-                                                   part_rev_,
-                                                   sub_part_no_,
-                                                   sub_part_rev_,
-                                                   structure_id_,
-                                                   pos_);
-      --dbms_output.put_line(objkey_);   
-      source_objkey_ := Get_Source_Eng_Part_Struc_objkey___(part_no_,
-                                                            sub_part_no_,
-                                                            sub_part_rev_,
-                                                            structure_id_,
-                                                            pos_);
-      dbms_output.put_line(sub_part_no_);
-      IF source_objkey_ IS NOT NULL THEN
-        IF Eng_Part_Structure_CFP.Get_Cf$_Copy_Circuit_Reference(source_objkey_) =
-           'TRUE' THEN
-          Copy_Circuit_Reference___(objkey_,
-                                    Eng_Part_Structure_CFP.Get_Cf$_Circuit_Ref(source_objkey_));
-          Remove_Copy_Circuit_Ref_Flag___(source_objkey_);
-        END IF;
-      END IF;
-    END LOOP;
-  END Copy_Circuit_Reference__;
+         objkey_ := Eng_Part_Structure_API.Get_Objkey(part_no_,
+                                                      part_rev_,
+                                                      sub_part_no_,
+                                                      sub_part_rev_,
+                                                      structure_id_,
+                                                      pos_);
+      
+         source_objkey_ := Get_Source_Eng_Part_Struc_objkey___(part_no_,
+                                                               sub_part_no_,
+                                                               sub_part_rev_,
+                                                               structure_id_,
+                                                               pos_);
+      
+         IF source_objkey_ IS NOT NULL THEN
+            IF Eng_Part_Structure_CFP.Get_Cf$_Copy_Circuit_Reference(source_objkey_) = 'TRUE' THEN
+               Copy_Circuit_Reference___(objkey_,
+                                         Eng_Part_Structure_CFP.Get_Cf$_Circuit_Ref(source_objkey_));
+               Remove_Copy_Circuit_Ref_Flag___(source_objkey_);
+             END IF;
+         END IF;
+      END LOOP;
+   END Copy_Circuit_Reference__;
 
   PROCEDURE Close_Non_Finance_User_Group IS
     non_finance_user_group_ VARCHAR2(30) := 'NF';
@@ -1113,15 +1178,45 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
     END LOOP;
   END Close_Non_Finance_User_Group;
 
-FUNCTION Check_Cause_Discount(wo_no_ IN VARCHAR2, type_ IN varchar2) return VARCHAR2 IS
+  FUNCTION Check_Cause_Discount(wo_no_   IN NUMBER,
+                                company_ IN varchar2,
+                                site_    IN VARCHAR2,
+                                type_    IN varchar2) return VARCHAR2 IS
   
-    temp_           VARCHAR2(5);
-    cause_discount_ number;
-    material_discount_ number;
+    temp_               VARCHAR2(5) := 'FALSE';
+    cause_discount_     number;
+    material_discount_  number;
     personnel_discount_ number;
-    cause_objkey_   varchar2(2000);
+    cause_objkey_       varchar2(2000);
   
-    cursor get_wo_task_cause(in_wo_no_ varchar2) is
+    cursor get_wo_tasks is
+      select task_seq
+        from JT_TASK_UIV_CFV
+       where wo_no = wo_no_
+         and company like NVL(company_, '%')
+         and site like NVL(site_, '%')
+         and ERROR_CAUSE is not null
+         and CF$_SERVICE_PACKAGE is not null;
+  
+    cursor get_cause_details(in_wo_no_ number, task_seq_ number) is
+      SELECT cf$_material_discount, cf$_personnel_discount
+        FROM SERVICE_PACKAGE_DETAIL_CLT
+       WHERE cf$_cause in
+             (select objkey
+                from IFSAPP.MAINTENANCE_CAUSE_CODE
+               where ERR_CAUSE in (select ERROR_CAUSE
+                                     from IFSAPP.JT_TASK_UIV_CFV
+                                    where wo_no = in_wo_no_
+                                      and TASK_SEQ = task_seq_))
+         and CF$_SERVICE_PACKAGE in
+             (select OBJKEY
+                from IFSAPP.SERVICE_PACKAGE_CLV
+               where CF$_NAME in (select CF$_SERVICE_PACKAGE
+                                    from IFSAPP.JT_TASK_UIV_CFV
+                                   where wo_no = in_wo_no_
+                                     and TASK_SEQ = task_seq_));
+  
+    cursor get_wo_task_cause(in_wo_no_ number) is
       select error_cause, REPORTED_OBJ_CONN_ROWKEY
         from JT_TASK_UIV
        where wo_no = in_wo_no_
@@ -1136,70 +1231,67 @@ FUNCTION Check_Cause_Discount(wo_no_ IN VARCHAR2, type_ IN varchar2) return VARC
              Jt_Task_Cfp.Get_Cf$_Service_Package(reported_obj_conn_rowkey_);
   
   BEGIN
-  
-    for rec_ in get_wo_task_cause(wo_no_) loop
-      if (get_wo_task_cause%notfound) then
-        temp_ := 'false';
+
+    for tasks_ in get_wo_tasks loop
+      if (get_wo_tasks%notfound) then
+        temp_ := 'FALSE';
         exit;
       else
-        open get_cause(rec_.error_cause, rec_.reported_obj_conn_rowkey);
-        fetch get_cause
-          into cause_objkey_;
-        close get_cause;
+        open get_cause_details(wo_no_, tasks_.task_seq);
+        fetch get_cause_details
+          into material_discount_, personnel_discount_;
+        close get_cause_details;
       
-        if (cause_objkey_ is not null) then
-          material_discount_ := SERVICE_PACKAGE_DETAIL_CLP.Get_Cf$_Material_Discount(maintenance_cause_code_api.get_objkey(cause_objkey_));
-          personnel_discount_ := SERVICE_PACKAGE_DETAIL_CLP.Get_Cf$_Personnel_Discount(maintenance_cause_code_api.get_objkey(cause_objkey_));
-          
-          if(material_discount_ =0 and personnel_discount_= 0)then
-           cause_discount_ := 0;
-          elsif(material_discount_ =100 and personnel_discount_= 100)then
-           cause_discount_ := 100;
+        if (type_ = 'Chargeable') then
+          if (material_discount_ = 0 and personnel_discount_ = 0) then
+            temp_ := 'TRUE';
+            exit;
           end if;
-          
-          if (type_ = 'Chargeable') then
-            if (cause_discount_ is not null and cause_discount_ = 0) then
-              temp_ := 'true';
-              exit;
-            end if;
-          elsif (type_ = 'Non-Chargeable') then
-            if (cause_discount_ is not null and cause_discount_ = 100) then
-              temp_ := 'true';
-              exit;
-            end if;
-          end if;         
-          
+        elsif (type_ = 'Non-Chargeable') then
+          if (material_discount_ = 1 and personnel_discount_ = 1) then
+            temp_ := 'TRUE';
+            exit;
+          end if;
         end if;
       end if;
+    
     end loop;
-  
+
     return temp_;
   END Check_Cause_Discount;
 
-  FUNCTION Get_Allowed_Tax_Codes__(company_    IN VARCHAR2,
-                                   customer_   IN VARCHAR2,
-                                   catalog_no_ IN VARCHAR2) RETURN VARCHAR2 IS
-    allowed_tax_codes_ VARCHAR2(2000);
-  BEGIN
-    SELECT LISTAGG(fee_code, ', ') within GROUP(ORDER BY fee_code) fee_code
-      INTO allowed_tax_codes_
-      FROM (SELECT FEE_CODE
-              FROM TAX_CODE_RESTRICTED
-             WHERE fee_code IN
-                   (SELECT a.cf$_Tax_Code
-                      FROM SALES_PART_TAX_CODE_CLV a
-                     WHERE a.CF$_SALES_PART_NO = catalog_no_)
-               AND fee_code IN
-                   (SELECT b.cf$_tax_code
-                      FROM CUST_APPLICABLE_TAX_CODE_CLV b
-                     WHERE b.CF$_COMPANY = company_
-                       AND b.CF$_CUSTOMER = customer_)
-               AND COMPANY = company_);
-    RETURN allowed_tax_codes_;
-  EXCEPTION
-    WHEN OTHERS THEN
-      RETURN NULL;
-  END;
+   FUNCTION Get_Allowed_Tax_Codes__(
+      company_    IN VARCHAR2,
+      customer_   IN VARCHAR2,
+      catalog_no_ IN VARCHAR2) RETURN VARCHAR2
+   IS
+      allowed_tax_codes_ VARCHAR2(2000);
+      stmt_ VARCHAR2(2000);
+   BEGIN
+      stmt_ := 
+       'SELECT LISTAGG(fee_code, '', '') WITHIN GROUP(ORDER BY fee_code) fee_code
+        FROM (SELECT fee_code
+                FROM tax_code_restricted
+               WHERE fee_code IN
+                     (SELECT a.cf$_Tax_Code
+                        FROM sales_part_tax_code_clv a
+                       WHERE a.cf$_sales_part_no = :1)
+                 AND fee_code IN
+                     (SELECT b.cf$_tax_code
+                        FROM cust_applicable_tax_code_clv b
+                       WHERE b.cf$_company = :2
+                         AND b.cf$_customer = :3)
+                 AND COMPANY = :4)';
+      IF Database_SYS.View_Exist('SALES_PART_TAX_CODE_CLV') AND Database_SYS.View_Exist('CUST_APPLICABLE_TAX_CODE_CLV') THEN
+         EXECUTE IMMEDIATE stmt_    
+            INTO allowed_tax_codes_
+           USING catalog_no_,company_,customer_,company_;
+      END IF;          
+      RETURN allowed_tax_codes_;
+   EXCEPTION
+      WHEN OTHERS THEN
+         RETURN NULL;
+   END Get_Allowed_Tax_Codes__;
 
   FUNCTION Transf_Mansup_Attach_To_PO(target_key_ref_ IN VARCHAR2,
                                       service_name_   IN VARCHAR2)
@@ -1266,307 +1358,273 @@ FUNCTION Check_Cause_Discount(wo_no_ IN VARCHAR2, type_ IN varchar2) return VARC
     RETURN location_no_;
   END Get_Location_Inv_Part_Barcode; 
   
-  PROCEDURE Create_Functional_Object__ (
-     project_id_     IN VARCHAR2,
-     sub_project_id_ IN VARCHAR2)
-  IS
-    company_ VARCHAR2(20);
-    object_id_              VARCHAR2(20);
-    sub_proj_inst_site_     VARCHAR2(20);
-    sales_contract_no_      VARCHAR2(20);
-    project_default_site_   VARCHAR2(20);
-    installation_site_      VARCHAR2(10);
-    warranty_period_        VARCHAR2(10);
-    warranty_period_objkey_ VARCHAR2(50);
-
-    hand_over_date_          DATE;
-    sales_contract_site_rec_ SALES_CONTRACT_SITE_CLP.Public_Rec;
-
-    CURSOR get_activity_misc_parts IS
-      SELECT part_no, part_desc, SUM(require_qty) quantity
-        FROM (SELECT t.part_no,
-                     Project_Misc_Procurement_API.Get_Selected_Description(SUPPLY_OPTION,
-                                                                           SITE,
-                                                                           t.PART_NO,
-                                                                           MATR_SEQ_NO) part_desc,
-                     require_qty
-                FROM PROJECT_MISC_PROCUREMENT t,
-                     (SELECT part_no, contract, cf$_serviceable_Db
-                        FROM SALES_PART_CFV t
-                       WHERE t.CF$_SERVICEABLE_DB = 'TRUE') a
-               where t.site = a.contract
-                 and t.part_no = a.part_no
-                 and company = company_
-                 and t.ACTIVITY_SEQ IN
-                     (SELECT ACTIVITY_SEQ
-                        FROM ACTIVITY1 t
-                       where t.sub_project_id = sub_project_id_
-                         and t.project_id = project_id_)
-                 and t.part_no is not null)
-       group by part_no, part_desc;
-
-    FUNCTION Get_Object_Id___(
+   PROCEDURE Create_Functional_Object__ (
       project_id_     IN VARCHAR2,
-      sub_project_id_ IN VARCHAR2) RETURN VARCHAR2 
-    IS
-      object_id_ VARCHAR2(50);
-      rec_       Equipment_Object_api.Public_Rec;
-    BEGIN
-      SELECT cf$_object_id_db
-        INTO object_id_
-        FROM SUB_PROJECT_CFV
-       WHERE project_id = project_id_
-         AND sub_project_id = sub_project_id_;
-      rec_ := Equipment_Object_api.Get_By_Rowkey(object_id_);
-      RETURN rec_.mch_code;
-    EXCEPTION
-      WHEN OTHERS THEN
-        RETURN NULL;
-    END Get_Object_Id___;
+      sub_project_id_ IN VARCHAR2)
+   IS
+      company_ VARCHAR2(20);
+      object_id_              VARCHAR2(20);
+      sub_proj_inst_site_     VARCHAR2(20);
+      sales_contract_no_      VARCHAR2(20);
+      project_default_site_   VARCHAR2(20);
+      installation_site_      VARCHAR2(10);
+      warranty_period_        VARCHAR2(10);
+      warranty_period_objkey_ VARCHAR2(50);
 
-    FUNCTION Get_Sales_Contract_No___(
-      project_id_ IN VARCHAR2,
-      company_    IN VARCHAR2) RETURN VARCHAR2 
-    IS
-      sales_contract_no_ VARCHAR2(50);
-    BEGIN
-      SELECT cf$_sales_contract_no
-        INTO sales_contract_no_
-        FROM PROJECT_CFV
-       WHERE project_id = project_id_
-         AND company = company_;
-      RETURN sales_contract_no_;
-    EXCEPTION
-      WHEN OTHERS THEN
-        RETURN NULL;
-    END Get_Sales_Contract_No___;
+      hand_over_date_          DATE;
+      sales_contract_site_rec_ Sales_Contract_Site_CLP.Public_Rec;
 
-    FUNCTION Get_Installation_Site___(
-      project_id_     IN VARCHAR2,
-      sub_project_id_ IN VARCHAR2) RETURN VARCHAR2 
-    IS
-      installation_site_ VARCHAR2(50);
-    BEGIN
-      SELECT cf$_installation_site
+      CURSOR get_activity_misc_parts IS
+         SELECT part_no, part_desc, SUM(require_qty) quantity
+           FROM (SELECT t.part_no,
+                        Project_Misc_Procurement_API.
+                           Get_Selected_Description(supply_option,site,t.part_no,matr_seq_no) part_desc,
+                        require_qty
+                   FROM project_misc_procurement t,
+                        (SELECT part_no, contract, cf$_serviceable_Db
+                           FROM sales_part_cfv t
+                          WHERE t.cf$_serviceable_db = 'TRUE') a
+                  WHERE  t.site = a.contract
+                    AND t.part_no = a.part_no
+                    AND company = company_
+                    AND t.activity_seq IN
+                        (SELECT activity_seq
+                           FROM activity1 t
+                          WHERE t.sub_project_id = sub_project_id_
+                            AND t.project_id = project_id_)
+                    AND t.part_no IS NOT NULL)
+       GROUP BY part_no, part_desc;
 
-        INTO installation_site_
-        FROM SUB_PROJECT_CFV
-       WHERE project_id = project_id_
-         AND sub_project_id = sub_project_id_;
-      RETURN installation_site_;
-    EXCEPTION
-      WHEN OTHERS THEN
-        RETURN NULL;
-    END Get_Installation_Site___;
+      FUNCTION Get_Object_Id___(
+        project_id_     IN VARCHAR2,
+        sub_project_id_ IN VARCHAR2) RETURN VARCHAR2 
+      IS
+        object_id_ VARCHAR2(50);
+        rec_       Equipment_Object_api.Public_Rec;
+      BEGIN
+         SELECT cf$_object_id_db
+           INTO object_id_
+           FROM sub_project_cfv
+          WHERE project_id = project_id_
+            AND sub_project_id = sub_project_id_;
+         rec_ := Equipment_Object_API.Get_By_Rowkey(object_id_);
+         RETURN rec_.mch_code;
+      EXCEPTION
+         WHEN OTHERS THEN
+            RETURN NULL;
+      END Get_Object_Id___;
 
-    FUNCTION Get_Sales_Contract_Site_Rec___(
-       contract_no_ IN VARCHAR2,
-       site_no_     IN VARCHAR2) RETURN SALES_CONTRACT_SITE_CLP.Public_Rec 
-    IS
-      objkey_ VARCHAR2(50);
-      rec_    SALES_CONTRACT_SITE_CLP.Public_Rec;
-    BEGIN
-      dbms_output.put_line(contract_no_ || '-' || site_no_);
-      SELECT a.objkey
-        INTO objkey_
-        FROM SALES_CONTRACT_SITE_CLV a, CONTRACT_REVISION b
-       WHERE a.CF$_CONTRACT_NO = b.contract_no
-         AND a.CF$_REV_SEQ = b.rev_seq
-         AND b.objstate = 'Active'
-         and a.cf$_contract_no = contract_no_
-         and a.CF$_SITE_NO = site_no_;
-      dbms_output.put_line(objkey_);
-      IF objkey_ IS NOT NULL THEN
-        rec_ := SALES_CONTRACT_SITE_CLP.Get(objkey_);
+      FUNCTION Get_Sales_Contract_No___(
+         project_id_ IN VARCHAR2,
+         company_    IN VARCHAR2) RETURN VARCHAR2 
+      IS
+         sales_contract_no_ VARCHAR2(50);
+      BEGIN
+         SELECT cf$_sales_contract_no
+           INTO sales_contract_no_
+           FROM project_cfv
+          WHERE project_id = project_id_
+            AND company = company_;
+         RETURN sales_contract_no_;
+      EXCEPTION
+         WHEN OTHERS THEN
+           RETURN NULL;
+      END Get_Sales_Contract_No___;
+
+      FUNCTION Get_Installation_Site___(
+         project_id_     IN VARCHAR2,
+         sub_project_id_ IN VARCHAR2) RETURN VARCHAR2 
+      IS
+         installation_site_ VARCHAR2(50);
+      BEGIN
+         SELECT cf$_installation_site
+           INTO installation_site_
+           FROM sub_project_cfv
+          WHERE project_id = project_id_
+            AND sub_project_id = sub_project_id_;
+         RETURN installation_site_;
+      EXCEPTION
+         WHEN OTHERS THEN
+            RETURN NULL;
+      END Get_Installation_Site___;
+
+      FUNCTION Get_Sales_Contract_Site_Rec___(
+         contract_no_ IN VARCHAR2,
+         site_no_     IN VARCHAR2) RETURN Sales_Contract_Site_CLP.Public_Rec 
+      IS
+         objkey_ VARCHAR2(50);
+         rec_    Sales_Contract_Site_CLP.Public_Rec;
+      BEGIN
+         SELECT a.objkey
+           INTO objkey_
+           FROM sales_contract_site_clv a, contract_revision b
+          WHERE a.cf$_contract_no = b.contract_no
+            AND a.cf$_rev_seq = b.rev_seq
+            AND b.objstate = 'Active'
+            AND a.cf$_contract_no = contract_no_
+            AND a.cf$_site_no = site_no_;
+         IF objkey_ IS NOT NULL THEN
+           rec_ := Sales_Contract_Site_CLP.Get(objkey_);
+         END IF;
+         RETURN rec_;
+      EXCEPTION
+         WHEN OTHERS THEN
+            RETURN NULL;
+      END Get_Sales_Contract_Site_Rec___;
+
+      FUNCTION Get_Service_warranty_Objkey___(
+         warranty_period_ IN VARCHAR2) RETURN VARCHAR2 
+      IS
+         objkey_ VARCHAR2(50);
+      BEGIN
+         SELECT objkey
+           INTO objkey_
+           FROM warranty_clv
+          WHERE cf$_warranty_period = warranty_period_;
+         RETURN objkey_;
+      EXCEPTION
+         WHEN OTHERS THEN
+            RETURN NULL;
+      END Get_Service_warranty_Objkey___;
+
+      FUNCTION Get_Default_Project_Site___(
+         company_    IN VARCHAR2,
+         project_id_ IN VARCHAR2) RETURN VARCHAR2 
+      IS
+         site_ VARCHAR2(20);
+      BEGIN
+         SELECT site
+           INTO site_
+           FROM project_site_ext
+          WHERE company = company_
+            AND project_id = project_id_
+            AND project_site_type_db = 'DEFAULTSITE';
+         RETURN site_;
+      EXCEPTION
+         WHEN OTHERS THEN
+            RETURN NULL;
+      END Get_Default_Project_Site___;
+
+      FUNCTION Get_Attr___(
+         part_no_         IN VARCHAR2,
+         part_desc_       IN VARCHAR2,
+         project_id_      IN VARCHAR2,
+         sub_project_id_  IN VARCHAR2,
+         sup_mch_code_    IN VARCHAR2,
+         production_date_ IN DATE) RETURN VARCHAR2 
+      IS
+         attr_               VARCHAR2(32000);
+         site_               VARCHAR2(20) := '2013';
+         object_level_       VARCHAR2(100) := '900_FUNCTIONAL_EQUIPMENT';
+         operational_status_ VARCHAR2(20) := 'IN_OPERATION';
+      BEGIN
+         Client_SYS.Clear_Attr(attr_);
+         Client_SYS.Add_To_Attr('PART_NO', part_no_, attr_);
+         Client_SYS.Add_To_Attr('MCH_CODE',part_no_ || project_id_ || sub_project_id_,attr_);
+         Client_SYS.Add_To_Attr('MCH_NAME', part_desc_, attr_);
+         Client_SYS.Add_To_Attr('CONTRACT', site_, attr_);
+         Client_SYS.Add_To_Attr('PRODUCTION_DATE', production_date_, attr_);
+         Client_SYS.Add_To_Attr('SUP_CONTRACT', '2012', attr_);
+         Client_SYS.Add_To_Attr('OBJ_LEVEL', object_level_, attr_);
+         Client_SYS.Add_To_Attr('OPERATIONAL_STATUS_DB',operational_status_,attr_);
+         Client_SYS.Add_To_Attr('SUP_MCH_CODE', sup_mch_code_, attr_);
+         RETURN attr_;
+      END Get_Attr___;
+
+      FUNCTION Get_Cf_Attr___(
+         project_id_       IN VARCHAR2,
+         sub_project_id_   IN VARCHAR2,
+         equipment_qty_    IN NUMBER,
+         service_warranty_ IN VARCHAR2) RETURN VARCHAR2 
+      IS
+         attr_ VARCHAR2(32000);
+      BEGIN
+         Client_SYS.Clear_Attr(attr_);
+         Client_SYS.Add_To_Attr('CF$_EQUIPMENT_QUANTITY', equipment_qty_, attr_);
+         Client_SYS.Add_To_Attr('CF$_SUB_PROJECT_ID', sub_project_id_, attr_);
+         Client_SYS.Add_To_Attr('CF$_PROJ_ID', project_id_, attr_);
+         Client_SYS.Add_To_Attr('CF$_SERVICE_WARRANTY_DB', service_warranty_, attr_);
+         RETURN attr_;
+      END Get_Cf_Attr___;
+
+      PROCEDURE Create_Funct_Equip_Obj___(
+         part_no_          IN VARCHAR2,
+         part_desc_        IN VARCHAR2,
+         project_id_       IN VARCHAR2,
+         sub_project_id_   IN VARCHAR2,
+         sup_mch_code_     IN VARCHAR2,
+         production_date_  IN DATE,
+         equipment_qty_    IN NUMBER,
+         service_warranty_ IN VARCHAR2) 
+      IS
+         info_       VARCHAR2(32000);
+         objid_      VARCHAR2(50);
+         objversion_ VARCHAR2(50);
+         attr_       VARCHAR2(32000);
+         attr_cf_    VARCHAR2(32000);
+         site_       VARCHAR2(20) := '2013';
+      BEGIN
+         IF NOT Equipment_Functional_API.Exists(site_,part_no_ || project_id_ || sub_project_id_) THEN
+            attr_ := Get_Attr___(part_no_,
+                                 part_desc_,
+                                 project_id_,
+                                 sub_project_id_,
+                                 sup_mch_code_,
+                                 production_date_);
+            Equipment_Functional_API.New__(info_,objid_,objversion_,attr_,'DO');
+            IF objid_ IS NOT NULL THEN             
+               attr_cf_ := Get_Cf_Attr___(project_id_,sub_project_id_,equipment_qty_,service_warranty_);
+               Equipment_Functional_CFP.Cf_New__(info_,objid_,attr_cf_,'','DO');
+            END IF;
+         END IF;
+         NULL;
+      END Create_Funct_Equip_Obj___;
+   BEGIN
+      company_ := Project_API.Get_Company(project_id_);
+      object_id_ := Get_Object_Id___(project_id_, sub_project_id_);
+
+      IF object_id_ IS NULL THEN
+         Error_SYS.Appl_General('custom',
+                                'ERROR_OBJ_ID: This operation is only possible for sub projects with Object ID');
       END IF;
-      RETURN rec_;
-    EXCEPTION
-      WHEN OTHERS THEN
-        RETURN NULL;
-    END Get_Sales_Contract_Site_Rec___;
+      sub_proj_inst_site_ := Get_Installation_Site___(project_id_, sub_project_id_);    
+      sales_contract_no_ := Get_Sales_Contract_No___(project_id_, company_);    
+      project_default_site_ := Get_Default_Project_Site___(company_, project_id_);   
+      installation_site_ := Get_Installation_Site___(project_id_,sub_project_id_);   
+      sales_contract_site_rec_ := Get_Sales_Contract_Site_Rec___(sales_contract_no_, installation_site_);
 
-    FUNCTION Get_Service_warranty_Objkey___(
-      warranty_period_ IN VARCHAR2) RETURN VARCHAR2 
-    IS
-      objkey_ VARCHAR2(50);
-    BEGIN
-      SELECT objkey
-        INTO objkey_
-        FROM WARRANTY_CLV
-       WHERE CF$_WARRANTY_PERIOD = warranty_period_;
-      RETURN objkey_;
-    EXCEPTION
-      WHEN OTHERS THEN
-        RETURN NULL;
-    END Get_Service_warranty_Objkey___;
+      hand_over_date_  := sales_contract_site_rec_.cf$_delivered_on;
+      warranty_period_ := sales_contract_site_rec_.cf$_warranty_period;
 
-    FUNCTION Get_Default_Project_Site___(
-      company_    IN VARCHAR2,
-      project_id_ IN VARCHAR2) RETURN VARCHAR2 
-    IS
-      site_ VARCHAR2(20);
-    BEGIN
-      SELECT site
-        INTO site_
-        FROM PROJECT_SITE_EXT
-       WHERE company = company_
-         AND project_id = project_id_
-         AND project_site_type_db = 'DEFAULTSITE';
-      RETURN site_;
-    EXCEPTION
-      WHEN OTHERS THEN
-        RETURN NULL;
-    END Get_Default_Project_Site___;
 
-    FUNCTION Get_Attr___(
-      part_no_         IN VARCHAR2,
-      part_desc_       IN VARCHAR2,
-      project_id_      IN VARCHAR2,
-      sub_project_id_  IN VARCHAR2,
-      sup_mch_code_    IN VARCHAR2,
-      production_date_ IN DATE) RETURN VARCHAR2 
-    IS
-      attr_               VARCHAR2(32000);
-      site_               VARCHAR2(20) := '2013';
-      object_level_       VARCHAR2(100) := '900_FUNCTIONAL_EQUIPMENT';
-      operational_status_ VARCHAR2(20) := 'IN_OPERATION';
-    BEGIN
-      Client_SYS.Clear_Attr(attr_);
-      Client_SYS.Add_To_Attr('PART_NO', part_no_, attr_);
-      Client_SYS.Add_To_Attr('MCH_CODE',
-                             part_no_ || project_id_ || sub_project_id_,
-                             attr_);
-      Client_SYS.Add_To_Attr('MCH_NAME', part_desc_, attr_);
-      Client_SYS.Add_To_Attr('CONTRACT', site_, attr_);
-      Client_SYS.Add_To_Attr('PRODUCTION_DATE', production_date_, attr_);
-      Client_SYS.Add_To_Attr('SUP_CONTRACT', '2012', attr_);
-      Client_SYS.Add_To_Attr('OBJ_LEVEL', object_level_, attr_);
-      Client_SYS.Add_To_Attr('OPERATIONAL_STATUS_DB',
-                             operational_status_,
-                             attr_);
-      Client_SYS.Add_To_Attr('SUP_MCH_CODE', sup_mch_code_, attr_);
-      RETURN attr_;
-    END Get_Attr___;
-
-    FUNCTION Get_Cf_Attr___(
-        project_id_       IN VARCHAR2,
-        sub_project_id_   IN VARCHAR2,
-        equipment_qty_    IN NUMBER,
-        service_warranty_ IN VARCHAR2) RETURN VARCHAR2 
-    IS
-      attr_ VARCHAR2(32000);
-    BEGIN
-      Client_SYS.Clear_Attr(attr_);
-      Client_SYS.Add_To_Attr('CF$_EQUIPMENT_QUANTITY', equipment_qty_, attr_);
-      Client_SYS.Add_To_Attr('CF$_SUB_PROJECT_ID', sub_project_id_, attr_);
-      Client_SYS.Add_To_Attr('CF$_PROJ_ID', project_id_, attr_);
-      Client_SYS.Add_To_Attr('CF$_SERVICE_WARRANTY_DB',
-                             service_warranty_,
-                             attr_);
-      RETURN attr_;
-    END Get_Cf_Attr___;
-
-    PROCEDURE Create_Funct_Equip_Obj___(
-      part_no_          IN VARCHAR2,
-      part_desc_        IN VARCHAR2,
-      project_id_       IN VARCHAR2,
-      sub_project_id_   IN VARCHAR2,
-      sup_mch_code_     IN VARCHAR2,
-      production_date_  IN DATE,
-      equipment_qty_    IN NUMBER,
-      service_warranty_ IN VARCHAR2) 
-    IS
-      info_       VARCHAR2(32000);
-      objid_      VARCHAR2(50);
-      objversion_ VARCHAR2(50);
-      attr_       VARCHAR2(32000);
-      attr_cf_    VARCHAR2(32000);
-      site_       VARCHAR2(20) := '2013';
-    BEGIN
-      IF NOT EQUIPMENT_FUNCTIONAL_API.Exists(site_,
-                                             part_no_ || project_id_ ||
-                                             sub_project_id_) THEN
-        attr_ := Get_Attr___(part_no_,
-                             part_desc_,
-                             project_id_,
-                             sub_project_id_,
-                             sup_mch_code_,
-                             production_date_);
-        EQUIPMENT_FUNCTIONAL_API.New__(info_,
-                                       objid_,
-                                       objversion_,
-                                       attr_,
-                                       'DO');
-        IF objid_ IS NOT NULL THEN
-          dbms_output.put_line(service_warranty_);
-          attr_cf_ := Get_Cf_Attr___(project_id_,
-                                     sub_project_id_,
-                                     equipment_qty_,
-                                     service_warranty_);
-          EQUIPMENT_FUNCTIONAL_CFP.Cf_New__(info_,
-                                            objid_,
-                                            attr_cf_,
-                                            '',
-                                            'DO');
-        END IF;
+      IF sales_contract_site_rec_.cf$_contract_no IS NULL THEN
+         Error_SYS.Appl_General('Custom',
+                                'ERROR_NO_INSTALLATION_SITE: Installation site :P1 is not found in installation sites of the connected sales contract',
+                                installation_site_);
       END IF;
-      NULL;
-    END Create_Funct_Equip_Obj___;
 
-  BEGIN
-    company_ := Project_API.Get_Company(project_id_);
-    object_id_      := Get_Object_Id___(project_id_, sub_project_id_);
+      IF hand_over_date_ IS NULL THEN
+         Error_SYS.Appl_General('Custom',
+                                'ERROR_COMPLETE_DATE: Completion/Handover date of the installation site of connected sales contract is empty');
+      END IF;
 
-    IF object_id_ IS NULL THEN
-      Error_SYS.Appl_General('custom',
-                             'ERROR_OBJ_ID: This operation is only possible for sub projects with Object ID');
-    END IF;
-    sub_proj_inst_site_ := Get_Installation_Site___(project_id_,
-                                                    sub_project_id_);
-    
-    sales_contract_no_ := Get_Sales_Contract_No___(project_id_, company_);
-    
-    project_default_site_ := Get_Default_Project_Site___(company_,
-                                                         project_id_);
-   
-    installation_site_ := Get_Installation_Site___(project_id_,
-                                                   sub_project_id_);
-   
-    sales_contract_site_rec_ := Get_Sales_Contract_Site_Rec___(sales_contract_no_,
-                                                               installation_site_);
+      IF warranty_period_ IS NULL THEN
+         Error_SYS.Appl_General('Custom',
+                                'ERROR_WARRANTY_PERIOD: Warranty Period of the installation site of connected sales contract is empty');
+      END IF;
+      warranty_period_objkey_ := Get_Service_warranty_Objkey___(warranty_period_);
 
-    hand_over_date_  := sales_contract_site_rec_.CF$_DELIVERED_ON;
-    warranty_period_ := sales_contract_site_rec_.CF$_WARRANTY_PERIOD;
-
-
-    IF sales_contract_site_rec_.CF$_CONTRACT_NO IS NULL THEN
-      Error_SYS.Appl_General('Custom',
-                             'ERROR_NO_INSTALLATION_SITE: Installation site :P1 is not found in installation sites of the connected Sales Contract items',
-                             installation_site_);
-    END IF;
-
-    IF hand_over_date_ IS NULL THEN
-      Error_SYS.Appl_General('Custom',
-                             'ERROR_COMPLETE_DATE: Completion/Handover date of the installation site of connected Sales Contract items is empty');
-    END IF;
-
-    IF warranty_period_ IS NULL THEN
-      Error_SYS.Appl_General('Custom',
-                             'ERROR_WARRANTY_PERIOD: Warranty Period of the installation site of connected Sales Contract items is empty');
-    END IF;
-    warranty_period_objkey_ := Get_Service_warranty_Objkey___(warranty_period_);
-
-    FOR rec_ IN get_activity_misc_parts LOOP
-      Create_Funct_Equip_Obj___(rec_.part_no,
-                                rec_.part_desc,
-                                project_id_,
-                                sub_project_id_,
-                                object_id_,
-                                hand_over_date_,
-                                rec_.quantity,
-                                warranty_period_objkey_);
-    END LOOP;
-  END Create_Functional_Object__;
+      FOR rec_ IN get_activity_misc_parts LOOP
+         Create_Funct_Equip_Obj___(rec_.part_no,
+                                   rec_.part_desc,
+                                   project_id_,
+                                   sub_project_id_,
+                                   object_id_,
+                                   hand_over_date_,
+                                   rec_.quantity,
+                                   warranty_period_objkey_);
+      END LOOP;
+   END Create_Functional_Object__;
   
    PROCEDURE Sales_Contract_Auto_Closure IS
   
@@ -1802,7 +1860,93 @@ FUNCTION Check_Cause_Discount(wo_no_ IN VARCHAR2, type_ IN varchar2) return VARC
     END LOOP;
        RETURN temp_;
    END Check_Inv_Header_CA;
-
+   
+    FUNCTION Get_Largest_Overdue_Debt(identity_ IN VARCHAR2, company_ IN VARCHAR2) return VARCHAR2
+ IS
+ 
+ temp_ NUMBER;
+ 
+  CURSOR get_inv_info(company_ varchar2, identity_ varchar2)IS
+  SELECT  MAX(OPEN_AMOUNT)
+  FROM INVOICE_LEDGER_ITEM_CU_QRY
+  WHERE COMPANY =company_
+  AND IDENTITY = identity_
+  AND INV_STATE NOT IN ('Preliminary', 'Canceled', 'PaidPosted')
+  AND DUE_DATE< SYSDATE ;
+  
+ BEGIN
+   OPEN get_inv_info (company_,identity_);
+   FETCH get_inv_info INTO temp_;
+   CLOSE get_inv_info;
+   
+   RETURN temp_;
+ END  Get_Largest_Overdue_Debt;
+ 
+     
+  FUNCTION Get_Oldest_Overdue_Debt(identity_ IN VARCHAR2, company_ IN VARCHAR2) return VARCHAR2
+ IS
+ 
+ temp_ NUMBER;
+ 
+  CURSOR get_inv_info(company_ varchar2, identity_ varchar2)IS 
+  SELECT * FROM ( 
+  SELECT OPEN_AMOUNT
+  FROM INVOICE_LEDGER_ITEM_CU_QRY
+  WHERE COMPANY =company_
+  AND IDENTITY = identity_  
+  AND INV_STATE NOT IN ('Preliminary', 'Canceled', 'PaidPosted')
+  AND DUE_DATE in (SELECT min(DUE_DATE)  FROM INVOICE_LEDGER_ITEM_CU_QRY
+  WHERE COMPANY =company_
+  AND IDENTITY = identity_
+  AND INV_STATE NOT IN ('Preliminary', 'Canceled', 'PaidPosted')
+  AND DUE_DATE <SYSDATE
+  AND OPEN_AMOUNT>0
+  )order by open_amount desc
+  ) WHERE ROWNUM= 1
+  ;
+  
+  
+ BEGIN
+   OPEN get_inv_info (company_,identity_);
+   FETCH get_inv_info INTO temp_;
+   CLOSE get_inv_info;
+   
+   RETURN temp_;
+ END  Get_Oldest_Overdue_Debt;
+ 
+ FUNCTION Get_Oldest_Followup_Date(identity_ IN VARCHAR2, company_ IN VARCHAR2) return VARCHAR2
+ IS
+ 
+ temp_ DATE;
+ 
+    CURSOR get_inv_info(company_ varchar2, identity_ varchar2)IS 
+    SELECT  MIN(FOLLOW_UP_DATE) from 
+    INVOICE_HEADER_NOTES
+    WHERE INVOICE_ID IN (
+    SELECT * FROM ( 
+    SELECT INVOICE_ID FROM  invoice_tab t
+    WHERE  party_type = 'CUSTOMER'
+    AND    EXISTS (SELECT 1 FROM user_finance_auth_pub WHERE t.company = company_)
+    AND  identity=identity_
+    AND company = company_
+    AND exists ( SELECT 1 
+                  FROM INVOICE_LEDGER_ITEM_CU_QRY
+                  WHERE COMPANY =company_
+                  AND IDENTITY = identity_
+                  AND INVOICE_ID = t.invoice_id 
+                  AND INV_STATE NOT IN ('Preliminary', 'Canceled', 'PaidPosted')
+                  and DUE_DATE<sysdate
+                  )
+    order by creation_date desc   
+    ) where rownum=1  
+    )    ;       
+ BEGIN
+   OPEN get_inv_info (company_,identity_);
+   FETCH get_inv_info INTO temp_;
+   CLOSE get_inv_info;
+   
+   RETURN temp_;
+ END  Get_Oldest_Followup_Date;
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------
 -----------------------------------------------------------------------------

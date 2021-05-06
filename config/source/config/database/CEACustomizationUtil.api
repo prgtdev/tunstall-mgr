@@ -96,27 +96,33 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
                                            resource_id_     IN VARCHAR2 DEFAULT NULL)
     RETURN NUMBER;
 
-  FUNCTION Get_Begin_Date__(year_    IN VARCHAR2,
-                            quarter_ IN VARCHAR2,
-                            month_   IN VARCHAR2,
-                            week_    IN VARCHAR2) RETURN DATE DETERMINISTIC;
+   FUNCTION Get_Begin_Date__(
+      year_    IN VARCHAR2,
+      quarter_ IN VARCHAR2,
+      month_   IN VARCHAR2,
+      week_    IN VARCHAR2) RETURN DATE DETERMINISTIC;
 
-  FUNCTION Get_End_Date__(year_    IN VARCHAR2,
-                          quarter_ IN VARCHAR2,
-                          month_   IN VARCHAR2,
-                          week_    IN VARCHAR2) RETURN DATE DETERMINISTIC;
+   FUNCTION Get_End_Date__(
+      year_    IN VARCHAR2,
+      quarter_ IN VARCHAR2,
+      month_   IN VARCHAR2,
+      week_    IN VARCHAR2) RETURN DATE DETERMINISTIC;
 
-  PROCEDURE Copy_Circuit_Reference__(part_no_  IN VARCHAR2,
-                                     part_rev_ IN VARCHAR2);
+   PROCEDURE Copy_Circuit_Reference__(
+      part_no_  IN VARCHAR2,
+      part_rev_ IN VARCHAR2);
 
   PROCEDURE Close_Non_Finance_User_Group;
 
-  FUNCTION Check_Cause_Discount(wo_no_ IN VARCHAR2, type_ varchar2)
-    return VARCHAR2;
+FUNCTION Check_Cause_Discount(wo_no_   IN NUMBER,
+                                company_ IN varchar2,
+                                site_    IN VARCHAR2,
+                                type_    IN varchar2) return VARCHAR2 ;
 
-  FUNCTION Get_Allowed_Tax_Codes__(company_    IN VARCHAR2,
-                                   customer_   IN VARCHAR2,
-                                   catalog_no_ IN VARCHAR2) RETURN VARCHAR2;
+   FUNCTION Get_Allowed_Tax_Codes__(
+      company_    IN VARCHAR2,  
+      customer_   IN VARCHAR2,
+      catalog_no_ IN VARCHAR2) RETURN VARCHAR2;
 
   FUNCTION Transf_Mansup_Attach_To_PO(target_key_ref_ IN VARCHAR2,
                                       service_name_   IN VARCHAR2)
@@ -126,12 +132,19 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
   
   Function Get_Location_Inv_Part_Barcode(part_no_ IN VARCHAR2,
                                          contract_ IN VARCHAR2) RETURN VARCHAR2;
-  PROCEDURE Create_Functional_Object__ (project_id_     IN VARCHAR2,
-                                        sub_project_id_ IN VARCHAR2); 
+   PROCEDURE Create_Functional_Object__ (
+      project_id_     IN VARCHAR2,
+      sub_project_id_ IN VARCHAR2);
+   
  PROCEDURE Sales_Contract_Auto_Closure;
   
   FUNCTION Check_Inv_Header_CA(identity_ IN VARCHAR2, credit_analyst_ IN VARCHAR2, company_ IN VARCHAR2) return VARCHAR2;
-
+  
+  FUNCTION Get_Largest_Overdue_Debt(identity_ IN VARCHAR2, company_ IN VARCHAR2) return VARCHAR2;
+  
+  FUNCTION Get_Oldest_Overdue_Debt(identity_ IN VARCHAR2, company_ IN VARCHAR2) return VARCHAR2;
+  
+  FUNCTION Get_Oldest_Followup_Date(identity_ IN VARCHAR2, company_ IN VARCHAR2) return VARCHAR2;
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------
 -----------------------------------------------------------------------------
