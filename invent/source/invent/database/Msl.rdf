@@ -52,11 +52,15 @@ BEGIN
    Database_SYS.Set_Table_Column(columns_, 'ROWVERSION', 'NUMBER', 'Y');
    Database_SYS.Set_Table_Column(columns_, 'TRANSPORT_TASK_ID', 'NUMBER', 'Y');
    Database_SYS.Set_Table_Column(columns_, 'CREATE_DATE', 'DATE', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'LINE_NO', 'NUMBER', 'Y');
    Database_SYS.Set_Table_Column(columns_, 'LINE_PART_NO', 'VARCHAR2(4000)', 'Y');
    Database_SYS.Set_Table_Column(columns_, 'LINE_TO_LOCATION_NO', 'VARCHAR2(4000)', 'Y');
    Database_SYS.Set_Table_Column(columns_, 'LINE_LOT_BATCH_NO', 'VARCHAR2(4000)', 'Y');
    Database_SYS.Set_Table_Column(columns_, 'LINE_QUANTITY', 'NUMBER', 'Y');
-   Database_SYS.Set_Table_Column(columns_, 'USE_BY_DATE', 'DATE', 'Y');      
+   Database_SYS.Set_Table_Column(columns_, 'USE_BY_DATE', 'DATE', 'Y'); 
+   Database_SYS.Set_Table_Column(columns_, 'AVAILABLE_BY_DATE', 'DATE', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'LINE_FROM_LOCATION_NO', 'VARCHAR2(4000)', 'Y'); 
+   Database_SYS.Set_Table_Column(columns_, 'EXECUTED_DATE', 'DATE', 'Y');    
    Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_REPORT_DATA', NULL, TRUE);
 END;
 /
@@ -79,13 +83,13 @@ PROMPT Creating report view MSL_REP
 
 CREATE OR REPLACE VIEW MSL_REP AS
 SELECT RESULT_KEY, ROW_NO, PARENT_ROW_NO, ROWVERSION
-   ,TRANSPORT_TASK_ID,CREATE_DATE,LINE_PART_NO,LINE_TO_LOCATION_NO,LINE_LOT_BATCH_NO,LINE_QUANTITY,USE_BY_DATE
+   ,TRANSPORT_TASK_ID,CREATE_DATE,LINE_NO,LINE_PART_NO,LINE_TO_LOCATION_NO,LINE_LOT_BATCH_NO,LINE_QUANTITY,USE_BY_DATE,AVAILABLE_BY_DATE,LINE_FROM_LOCATION_NO,EXECUTED_DATE
 FROM   MSL_RPT t
 WHERE EXISTS (SELECT 1 FROM allowed_report a WHERE a.result_key = t.result_key)
 WITH   read only;
 
 COMMENT ON TABLE MSL_REP
-   IS 'LU=TransportTask^PROMPT=Msl^MODULE=INVENT^TITLETEXT=Msl^';
+   IS 'LU=TransportTask^PROMPT=Msl^MODULE=INVENT^TITLETEXT=Msl Label^';
 
 COMMENT ON COLUMN MSL_REP.result_key
    IS 'FLAGS=M----^DATATYPE=NUMBER^';
@@ -95,6 +99,8 @@ COMMENT ON COLUMN MSL_REP.transport_task_id
    IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=Transport Task Id^QUERY=Transport Task Id:^QFLAGS=OW---^';
 COMMENT ON COLUMN MSL_REP.create_date
    IS 'FLAGS=A----^DATATYPE=DATE/DATETIME^TITLE=Create Date^';
+COMMENT ON COLUMN MSL_REP.line_no
+   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=Line No^';
 COMMENT ON COLUMN MSL_REP.line_part_no
    IS 'FLAGS=A----^DATATYPE=STRING(4000)^TITLE=Line Part No^';
 COMMENT ON COLUMN MSL_REP.line_to_location_no
@@ -103,6 +109,14 @@ COMMENT ON COLUMN MSL_REP.line_lot_batch_no
    IS 'FLAGS=A----^DATATYPE=STRING(4000)^TITLE=Line Lot Batch No^';
 COMMENT ON COLUMN MSL_REP.line_quantity
    IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=Line Quantity^';
+COMMENT ON COLUMN MSL_REP.use_by_date
+   IS 'FLAGS=A----^DATATYPE=DATE/DATE^TITLE=Use By Date^';
+COMMENT ON COLUMN MSL_REP.available_by_date
+   IS 'FLAGS=A----^DATATYPE=DATE/DATE^TITLE=Available By Date^';
+COMMENT ON COLUMN MSL_REP.line_from_location_no
+   IS 'FLAGS=A----^DATATYPE=STRING(4000)^TITLE=Line From Location No^';
+COMMENT ON COLUMN MSL_REP.executed_date
+   IS 'FLAGS=A----^DATATYPE=DATE/DATE^TITLE=Executed Date^';
 
 -----------------------------------------------------------------------------
 -------------------- REPORT REGISTRATION ------------------------------------
@@ -131,12 +145,16 @@ CREATE OR REPLACE PACKAGE BODY MSL_RPI IS
       create_date               VARCHAR2(32000));
 
    CURSOR get_task_line (transport_task_id_ NUMBER) IS
-      SELECT    
+      SELECT
+          line_no            line_no,            
           part_no            line_part_no,    
           to_location_no     line_to_location_no,
           lot_batch_no       line_lot_batch_no,     
           quantity           line_quantity,
           NULL               use_by_date,
+          NULL               available_by_date,
+          from_location_no   line_from_location_no,
+          NULL               executed_date,
           rowkey          
       FROM Transport_Task_Line_Tab
       WHERE transport_task_id     = transport_task_id_;
@@ -157,21 +175,29 @@ BEGIN
       result_key,
       transport_task_id,
       create_date,
+      line_no,
       line_part_no,
       line_to_location_no,
       line_lot_batch_no,
       line_quantity,
       use_by_date,
+      available_by_date,
+      line_from_location_no,
+      executed_date,
       row_no, parent_row_no)
    VALUES (
       result_key$_,
       nvl(binds$_.transport_task_id, binds$_.transport_task_id),
       binds$_.create_date,
+      rec_task_line_.line_no,
       rec_task_line_.line_part_no,
       rec_task_line_.line_to_location_no,
       rec_task_line_.line_lot_batch_no,
       rec_task_line_.line_quantity,
       rec_task_line_.use_by_date,
+      rec_task_line_.available_by_date,
+      rec_task_line_.line_from_location_no,
+      rec_task_line_.executed_date,
       row_no$_, 0);
    row_no$_ := row_no$_+1;
 END Add_Result_Row___;
@@ -197,9 +223,14 @@ IS
    par_task_line_ binds$;
    created_date_             DATE;
    use_by_date_              DATE;
-   stmt_                     VARCHAR2(4000);
-   TYPE Get_Use_By_Date IS REF CURSOR;
-   get_use_by_date_          Get_Use_By_Date;
+   available_by_date_        DATE;
+   executed_date_            DATE;
+   stmt_                     VARCHAR2(2000);
+   stmt1_                    VARCHAR2(2000);
+   TYPE Get_Dates            IS REF CURSOR;
+   get_dates_                Get_Dates;   
+   TYPE Get_Executed_Date    IS REF CURSOR;
+   get_executed_date_        Get_Executed_Date;
  
    CURSOR get_created_date(transport_task_id_ NUMBER) IS
       SELECT create_date
@@ -228,26 +259,47 @@ BEGIN
       has_task_line_ := get_task_line%FOUND OR get_task_line%ROWCOUNT > 0;
       EXIT WHEN get_task_line%NOTFOUND;
       Xml_Record_Writer_SYS.Start_Element(xml$_, 'TASK_LINE');
+      Xml_Record_Writer_SYS.Add_Element(xml$_, 'LINE_NO', rec_task_line_.line_no);
       Xml_Record_Writer_SYS.Add_Element(xml$_, 'LINE_PART_NO', rec_task_line_.line_part_no);
+      Xml_Record_Writer_SYS.Add_Element(xml$_, 'LINE_FROM_LOCATION_NO', rec_task_line_.line_from_location_no);
       Xml_Record_Writer_SYS.Add_Element(xml$_, 'LINE_TO_LOCATION_NO', rec_task_line_.line_to_location_no);
       Xml_Record_Writer_SYS.Add_Element(xml$_, 'LINE_LOT_BATCH_NO', rec_task_line_.line_lot_batch_no);
       Xml_Record_Writer_SYS.Add_Element(xml$_, 'LINE_QUANTITY', rec_task_line_.line_quantity);
-      
-      stmt_ := 'SELECT TO_DATE(:created_date_, ''DD/MM/YY'') + cf$_after_days ' ||  
+
+
+      stmt_ := 'SELECT TO_DATE(:created_date_, ''DD/MM/YY'') + cf$_before_days, ' ||
+               'TO_DATE(:created_date_, ''DD/MM/YY'') + cf$_after_days ' ||  
                'FROM M_S_L_TYPE_MAINTENANCE_CLV '|| 
                'WHERE cf$_msl_level = (SELECT cf$_msl_level '|| 
                                      ' FROM PART_CATALOG_CFV '||
                                      ' WHERE part_no = :part_no_)';
-                                 
+                                     
       --@ApproveDynamicStatement('2021-05-06',eamaheshi);
-      OPEN get_use_by_date_ FOR stmt_ USING created_date_,rec_task_line_.line_part_no;
+      OPEN get_dates_ FOR stmt_ USING created_date_, created_date_, rec_task_line_.line_part_no;
       LOOP 
-         FETCH get_use_by_date_ INTO use_by_date_;
-         EXIT WHEN get_use_by_date_%NOTFOUND;
+         FETCH get_dates_ INTO use_by_date_, available_by_date_;
+         EXIT WHEN get_dates_%NOTFOUND;
       END LOOP;
-      CLOSE get_use_by_date_; 
+      CLOSE get_dates_; 
       
       Xml_Record_Writer_SYS.Add_Element(xml$_, 'USE_BY_DATE', use_by_date_);
+      Xml_Record_Writer_SYS.Add_Element(xml$_, 'AVAILABLE_BY_DATE', available_by_date_);
+      
+      stmt1_ := 'SELECT c.cf$_executed_date ' ||
+                'FROM transport_task_line_cfv c, transport_task_line t '||
+                'WHERE t.transport_task_id = :transport_task_id_ '||
+                'AND t.line_no = :line_no '||
+                'AND c.objkey = t.objkey';                
+                 
+      --@ApproveDynamicStatement('2021-05-13',eamaheshi);
+      OPEN get_executed_date_ FOR stmt1_ USING binds$_.transport_task_id, rec_task_line_.line_no;
+      LOOP 
+         FETCH get_executed_date_ INTO executed_date_;
+         EXIT WHEN get_executed_date_%NOTFOUND;
+      END LOOP;
+      CLOSE get_executed_date_; 
+      
+      Xml_Record_Writer_SYS.Add_Element(xml$_, 'EXECUTED_DATE', executed_date_);
       Xml_Record_Writer_SYS.Add_Custom_Fields(xml$_, 'TransportTaskLine', rec_task_line_.rowkey, 'MSL_REP'); 
       Xml_Record_Writer_SYS.End_Element(xml$_, 'TASK_LINE');
       Add_Result_Row___(result_key$_,

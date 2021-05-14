@@ -423,7 +423,14 @@
                                     <xs:choice minOccurs="0" maxOccurs="1">
                                        <xs:element name="TASK_LINE">
                                           <xs:complexType>
-                                             <xs:choice minOccurs="0" maxOccurs="5">
+                                             <xs:choice minOccurs="0" maxOccurs="9">
+                                                <xs:element name="LINE_NO" nillable="true" minOccurs="0">
+                                                   <xs:simpleType>
+                                                      <xs:restriction base="xs:string">
+                                                         <xs:maxLength value="200"/>
+                                                      </xs:restriction>
+                                                   </xs:simpleType>
+                                                </xs:element>
                                                 <xs:element name="LINE_PART_NO" nillable="true" minOccurs="0">
                                                    <xs:simpleType>
                                                       <xs:restriction base="xs:string">
@@ -459,6 +466,27 @@
                                                       </xs:restriction>
                                                    </xs:simpleType>
                                                 </xs:element>
+                                                <xs:element name="AVAILABLE_BY_DATE" nillable="true" minOccurs="0">
+                                                   <xs:simpleType>
+                                                      <xs:restriction base="xs:string">
+                                                         <xs:maxLength value="200"/>
+                                                      </xs:restriction>
+                                                   </xs:simpleType>
+                                                </xs:element>
+                                                <xs:element name="LINE_FROM_LOCATION_NO" nillable="true" minOccurs="0">
+                                                   <xs:simpleType>
+                                                      <xs:restriction base="xs:string">
+                                                         <xs:maxLength value="200"/>
+                                                      </xs:restriction>
+                                                   </xs:simpleType>
+                                                </xs:element>
+                                                <xs:element name="EXECUTED_DATE" nillable="true" minOccurs="0">
+                                                   <xs:simpleType>
+                                                      <xs:restriction base="xs:string">
+                                                         <xs:maxLength value="200"/>
+                                                      </xs:restriction>
+                                                   </xs:simpleType>
+                                                </xs:element>
                                              </xs:choice>
                                           </xs:complexType>
                                        </xs:element>
@@ -481,7 +509,8 @@
                            <xs:sequence minOccurs="0" maxOccurs="unbounded">
                               <xs:element name="TASK_LINE">
                                  <xs:complexType>
-                                    <xs:choice minOccurs="0" maxOccurs="5">
+                                    <xs:choice minOccurs="0" maxOccurs="9">
+                                       <xs:element name="LINE_NO" type="xs:float" nillable="true" minOccurs="0"/>
                                        <xs:element name="LINE_PART_NO" nillable="true" minOccurs="0">
                                           <xs:simpleType>
                                              <xs:restriction base="xs:string">
@@ -505,6 +534,15 @@
                                        </xs:element>
                                        <xs:element name="LINE_QUANTITY" type="xs:float" nillable="true" minOccurs="0"/>
                                        <xs:element name="USE_BY_DATE" type="xs:dateTime" nillable="true" minOccurs="0"/>
+                                       <xs:element name="AVAILABLE_BY_DATE" type="xs:dateTime" nillable="true" minOccurs="0"/>
+                                       <xs:element name="LINE_FROM_LOCATION_NO" nillable="true" minOccurs="0">
+                                          <xs:simpleType>
+                                             <xs:restriction base="xs:string">
+                                                <xs:maxLength value="4000"/>
+                                             </xs:restriction>
+                                          </xs:simpleType>
+                                       </xs:element>
+                                       <xs:element name="EXECUTED_DATE" type="xs:dateTime" nillable="true" minOccurs="0"/>
                                     </xs:choice>
                                  </xs:complexType>
                               </xs:element>

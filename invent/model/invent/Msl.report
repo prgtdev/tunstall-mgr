@@ -56,8 +56,8 @@
                </LOCATION>
                <SIZE>
                   <POINT>
-                     <X>168</X>
-                     <Y>147</Y>
+                     <X>180</X>
+                     <Y>223</Y>
                   </POINT>
                </SIZE>
             </DIAGRAM_NODE>
@@ -84,11 +84,11 @@
                </PROPERTIES>
                <CONTROL_POINTS>
                   <POINT>
-                     <X>184</X>
+                     <X>185</X>
                      <Y>209</Y>
                   </POINT>
                   <POINT>
-                     <X>184</X>
+                     <X>186</X>
                      <Y>249</Y>
                   </POINT>
                </CONTROL_POINTS>
@@ -102,13 +102,20 @@
    <BLOCKS>
       <BLOCK>
          <NAME>TaskLine</NAME>
-         <CURSOR_DEFINITION>SELECT    
+         <CURSOR_DEFINITION>SELECT
+    line_no            line_no,    
     part_no            line_part_no,    
     to_location_no     line_to_location_no,
     lot_batch_no       line_lot_batch_no,     
-    quantity           line_quantity                    
+    quantity           line_quantity,
+    NULL               use_by_date,
+    NULL               available_by_date,
+    from_location_no   line_from_location_no,
+    NULL               executed_date       
 FROM Transport_Task_Line_Tab
-WHERE transport_task_id     = transport_task_id_</CURSOR_DEFINITION>
+WHERE transport_task_id     = transport_task_id_
+
+</CURSOR_DEFINITION>
          <PARAMETERS>
             <BLOCK_PARAMETER>
                <NAME>TransportTaskId</NAME>
@@ -116,6 +123,11 @@ WHERE transport_task_id     = transport_task_id_</CURSOR_DEFINITION>
             </BLOCK_PARAMETER>
          </PARAMETERS>
          <ATTRIBUTES>
+            <ATTRIBUTE>
+               <NAME>LineNo</NAME>
+               <DATATYPE>NUMBER</DATATYPE>
+               <LENGTH xsi:nil="1"/>
+            </ATTRIBUTE>
             <ATTRIBUTE>
                <NAME>LinePartNo</NAME>
                <DATATYPE>TEXT</DATATYPE>
@@ -138,6 +150,20 @@ WHERE transport_task_id     = transport_task_id_</CURSOR_DEFINITION>
             <ATTRIBUTE>
                <NAME>UseByDate</NAME>
                <DATATYPE>DATE</DATATYPE>
+            </ATTRIBUTE>
+            <ATTRIBUTE>
+               <NAME>AvailableByDate</NAME>
+               <DATATYPE>DATE</DATATYPE>
+            </ATTRIBUTE>
+            <ATTRIBUTE>
+               <NAME>LineFromLocationNo</NAME>
+               <DATATYPE>TEXT</DATATYPE>
+               <LENGTH>4000</LENGTH>
+            </ATTRIBUTE>
+            <ATTRIBUTE>
+               <NAME>ExecutedDate</NAME>
+               <DATATYPE>DATE</DATATYPE>
+               <LENGTH xsi:nil="1"/>
             </ATTRIBUTE>
          </ATTRIBUTES>
       </BLOCK>

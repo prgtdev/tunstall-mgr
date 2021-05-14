@@ -77,11 +77,15 @@
          <CREATE_DATE>Create Date:</CREATE_DATE>
          <TASK_LINES>
             <TASK_LINE>
+               <LINE_NO>Line No:</LINE_NO>
                <LINE_PART_NO>Line Part No:</LINE_PART_NO>
                <LINE_TO_LOCATION_NO>Line To Location No:</LINE_TO_LOCATION_NO>
                <LINE_LOT_BATCH_NO>Line Lot Batch No:</LINE_LOT_BATCH_NO>
                <LINE_QUANTITY>Line Quantity:</LINE_QUANTITY>
                <USE_BY_DATE>Use By Date:</USE_BY_DATE>
+               <AVAILABLE_BY_DATE>Available By Date:</AVAILABLE_BY_DATE>
+               <LINE_FROM_LOCATION_NO>Line From Location No:</LINE_FROM_LOCATION_NO>
+               <EXECUTED_DATE>Executed Date:</EXECUTED_DATE>
             </TASK_LINE>
          </TASK_LINES>
       </ATTRIBUTE_DISPLAY_TEXTS>
@@ -91,18 +95,26 @@
       <CREATE_DATE>2009-01-01T11:22:00</CREATE_DATE>
       <TASK_LINES>
          <TASK_LINE>
+            <LINE_NO>123</LINE_NO>
             <LINE_PART_NO>ABC</LINE_PART_NO>
             <LINE_TO_LOCATION_NO>ABC</LINE_TO_LOCATION_NO>
             <LINE_LOT_BATCH_NO>ABC</LINE_LOT_BATCH_NO>
             <LINE_QUANTITY>123</LINE_QUANTITY>
             <USE_BY_DATE>2009-01-01</USE_BY_DATE>
+            <AVAILABLE_BY_DATE>2009-01-01</AVAILABLE_BY_DATE>
+            <LINE_FROM_LOCATION_NO>ABC</LINE_FROM_LOCATION_NO>
+            <EXECUTED_DATE>2009-01-01</EXECUTED_DATE>
          </TASK_LINE>
          <TASK_LINE>
+            <LINE_NO>123</LINE_NO>
             <LINE_PART_NO>ABC</LINE_PART_NO>
             <LINE_TO_LOCATION_NO>ABC</LINE_TO_LOCATION_NO>
             <LINE_LOT_BATCH_NO>ABC</LINE_LOT_BATCH_NO>
             <LINE_QUANTITY>123</LINE_QUANTITY>
             <USE_BY_DATE>2009-01-01</USE_BY_DATE>
+            <AVAILABLE_BY_DATE>2009-01-01</AVAILABLE_BY_DATE>
+            <LINE_FROM_LOCATION_NO>ABC</LINE_FROM_LOCATION_NO>
+            <EXECUTED_DATE>2009-01-01</EXECUTED_DATE>
          </TASK_LINE>
       </TASK_LINES>
    </MSL_REP>
