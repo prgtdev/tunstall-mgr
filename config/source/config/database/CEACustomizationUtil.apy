@@ -2682,6 +2682,31 @@ FUNCTION Check_Inv_Header_CA(identity_ IN VARCHAR2, credit_analyst_ IN VARCHAR2,
     RETURN NVL(cash_collected_,0);
     
   END Get_Cash_Collected;
+  
+-- C0641  
+FUNCTION Get_Mrb_From_Po_Receipt (
+    order_ref1_     IN VARCHAR2,
+    order_ref2_     IN VARCHAR2,
+    order_ref3_     IN VARCHAR2,
+    order_ref4_     IN NUMBER) RETURN NUMBER  
+IS
+   mrb_number_      Mrb_Head.mrb_number%TYPE;
+
+   CURSOR get_rec IS
+      SELECT mrb_number
+      FROM   Mrb_Head
+      WHERE  order_ref1 = order_ref1_
+      AND    order_ref2 = order_ref2_
+      AND    order_ref3 = order_ref3_
+      AND    order_ref4 = order_ref4_
+      AND    order_ref5 = 0
+      AND    source_type_db = 'PURCHASE ORDER RECEIPT';
+BEGIN
+   OPEN  get_rec;
+   FETCH get_rec INTO mrb_number_;
+   CLOSE get_rec;
+   RETURN mrb_number_;
+END Get_Mrb_From_Po_Receipt;  
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------
 -----------------------------------------------------------------------------
