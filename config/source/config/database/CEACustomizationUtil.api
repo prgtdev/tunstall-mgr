@@ -46,7 +46,8 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
                                     invoice_id_     IN VARCHAR2,
                                     note_id_        IN NUMBER,
                                     note_status_id_ IN NUMBER);
-
+  
+  --C0446 EntChamuA (START)
   PROCEDURE Create_Equipment_Object__(order_no_ IN VARCHAR2);
 
   PROCEDURE Create_Serial_Object__(catalog_no_     IN VARCHAR2,
@@ -60,9 +61,6 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
                                    col_objid_      IN VARCHAR2,
                                    real_ship_date_ IN DATE);
 
-  PROCEDURE Create_Ext_Load_Forecast(info_         IN OUT NOCOPY VARCHAR2,
-                                     load_file_id_ IN NUMBER);
-
   PROCEDURE Create_Functional_Object_(catalog_no_     IN VARCHAR2,
                                       order_no_       IN VARCHAR2,
                                       line_no_        IN VARCHAR2,
@@ -75,6 +73,7 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
                                       buy_qty_due_    IN NUMBER,
                                       object_created_ in VARCHAR2,
                                       col_objid_      IN VARCHAR2);
+  --C0446 EntChamuA (END)
 
   FUNCTION Transf_Part_To_Inv_Part(target_key_ref_ IN VARCHAR2,
                                    service_name_   IN VARCHAR2)
@@ -212,7 +211,12 @@ FUNCTION Get_Mrb_From_Po_Receipt (
    order_ref1_     IN VARCHAR2,
    order_ref2_     IN VARCHAR2,
    order_ref3_     IN VARCHAR2,
-   order_ref4_     IN NUMBER) RETURN NUMBER;   
+   order_ref4_     IN NUMBER) RETURN NUMBER;  
+
+--C0654 EntChamuA (START)
+PROCEDURE Reserve_Kitted_Kanban_Parts;
+--C0654 EntChamuA (END)
+
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------
 -----------------------------------------------------------------------------

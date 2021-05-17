@@ -760,84 +760,6 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
                  and a.COMPANY = b.C4)
        ORDER BY row_no;
   
-    CURSOR get_forecast_details(contract_     VARCHAR2,
-                                part_no_      VARCHAR2,
-                                png_          VARCHAR2,
-                                ms_set_       NUMBER,
-                                activity_seq_ NUMBER,
-                                ms_date_      DATE) IS
-      SELECT objversion, objid, SYSGEN_FLAG
-        FROM LEVEL_1_FORECAST a
-       WHERE contract = contract_
-         AND part_no = part_no_
-         AND png = png_
-         AND ms_set = ms_set_
-         AND activity_seq = activity_seq_
-         AND ms_date = ms_date_;
-  BEGIN
-  
-    FOR rec IN get_info_ LOOP
-      BEGIN
-        TRACE_SYS.MESSAGE(rec.file_line);
-      
-        OPEN get_forecast_details(rec.c1,
-                                  rec.c2,
-                                  rec.c3,
-                                  rec.n1,
-                                  rec.n2,
-                                  rec.d1);
-        FETCH get_forecast_details
-          INTO objversion_, objid_, flag_;
-        CLOSE get_forecast_details;
-        Dbms_Output.put_line('AAA objversion_-->' || objversion_);
-        Dbms_Output.put_line('AAA objid_-->' || objid_);
-      
-        IF (objversion_ is null and objid_ is null) THEN
-          Client_Sys.Clear_Attr(attr_);
-        
-          TRACE_SYS.MESSAGE('NEW' || rec.d1);
-        
-          Client_Sys.Add_To_Attr('CONTRACT', rec.c1, attr_);
-          Client_Sys.Add_To_Attr('MS_DATE', rec.d1, attr_);
-          Client_Sys.Add_To_Attr('PART_NO', rec.c2, attr_);
-          Client_Sys.Add_To_Attr('PNG', rec.c3, attr_);
-          Client_Sys.Add_To_Attr('ACTIVITY_SEQ', rec.n2, attr_);
-          Client_Sys.Add_To_Attr('FORECAST_LEV0', rec.n3, attr_);
-          Client_Sys.Add_To_Attr('SYSGEN_FLAG', flag_, attr_);
-          Dbms_Output.put_line('attr_-->' || attr_);
-        
-          LEVEL_1_FORECAST_API.New__(infos_,
-                                     objid_,
-                                     objversion_,
-                                     attr_,
-                                     'DO');
-        ELSE
-          Client_Sys.Clear_Attr(attr_);
-          Client_Sys.Add_To_Attr('SYSGEN_FLAG', 'Proposed', attr_);
-        
-          TRACE_SYS.MESSAGE('MODIFY  rec.d1-->' || rec.d1);
-        
-          Client_Sys.Add_To_Attr('FORECAST_LEV0', rec.n3, attr_);
-          LEVEL_1_FORECAST_API.Modify__(infos_,
-                                        objid_,
-                                        objversion_,
-                                        attr_,
-                                        'DO');
-        END IF;
-        Ext_File_Trans_API.Update_Row_State(load_file_id_, rec.row_no, '3');
-      EXCEPTION
-        WHEN OTHERS THEN
-          TRACE_SYS.MESSAGE('EXCEPTION');
-          error_text_ := SUBSTR(SQLERRM, 1, 2000);
-          Ext_File_Trans_API.Update_Row_State(load_file_id_,
-                                              rec.row_no,
-                                              '5',
-                                              error_text_);
-      END;
-    END LOOP;
-  
-  END Create_Ext_Load_Forecast;
-
   FUNCTION Transf_Part_To_Inv_Part(target_key_ref_ IN VARCHAR2,
                                    service_name_   IN VARCHAR2)
     RETURN VARCHAR2 IS
@@ -2708,6 +2630,25 @@ BEGIN
    CLOSE get_rec;
    RETURN mrb_number_;
 END Get_Mrb_From_Po_Receipt;  
+
+--C0654 EntChamuA (START)
+  PROCEDURE Reserve_Kitted_Kanban_Parts
+  
+  IS 
+     
+     --Get the Kitterd parts that need reservation
+    -- CURSOR get_kitted IS 
+     --SELECT
+     
+     
+     --Get the Kanban parts that need reservation
+     
+  BEGIN
+     NULL;
+     
+     --varchar = SITE_API.Get_Manuf_Calendar_Id(contract);
+  END Reserve_Kitted_Kanban_Parts;
+   --C0654 EntChamuA (END)
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------
 -----------------------------------------------------------------------------
