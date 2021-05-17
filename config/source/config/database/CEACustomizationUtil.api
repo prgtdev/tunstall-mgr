@@ -213,9 +213,6 @@ FUNCTION Get_Mrb_From_Po_Receipt (
    order_ref3_     IN VARCHAR2,
    order_ref4_     IN NUMBER) RETURN NUMBER;  
 
---C0654 EntChamuA (START)
-PROCEDURE Reserve_Kitted_Kanban_Parts;
---C0654 EntChamuA (END)
 
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------

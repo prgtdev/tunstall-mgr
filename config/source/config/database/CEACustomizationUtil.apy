@@ -2631,24 +2631,6 @@ BEGIN
    RETURN mrb_number_;
 END Get_Mrb_From_Po_Receipt;  
 
---C0654 EntChamuA (START)
-  PROCEDURE Reserve_Kitted_Kanban_Parts
-  
-  IS 
-     
-     --Get the Kitterd parts that need reservation
-    -- CURSOR get_kitted IS 
-     --SELECT
-     
-     
-     --Get the Kanban parts that need reservation
-     
-  BEGIN
-     NULL;
-     
-     --varchar = SITE_API.Get_Manuf_Calendar_Id(contract);
-  END Reserve_Kitted_Kanban_Parts;
-   --C0654 EntChamuA (END)
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------
 -----------------------------------------------------------------------------
