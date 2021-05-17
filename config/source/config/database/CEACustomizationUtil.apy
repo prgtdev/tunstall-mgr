@@ -355,7 +355,7 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
     END IF;
   END Update_Follow_Up_Date__;
 
-  --C0446
+  --C0446 EntChamuA (START)
   PROCEDURE Create_Equipment_Object__(order_no_ IN VARCHAR2) IS
     temps_      NUMBER;
     seriliazed_ NUMBER;
@@ -442,7 +442,7 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
       END IF;
     END LOOP;
   END Create_Equipment_Object__;
-
+  
   PROCEDURE Create_Functional_Object_(catalog_no_     IN VARCHAR2,
                                       order_no_       IN VARCHAR2,
                                       line_no_        IN VARCHAR2,
@@ -576,7 +576,7 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
                                           'DO');
     END IF;
   END Create_Functional_Object_;
-
+  
   PROCEDURE Create_Serial_Object__(catalog_no_     IN VARCHAR2,
                                    order_no_       IN VARCHAR2,
                                    line_no_        IN VARCHAR2,
@@ -736,7 +736,8 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
       END LOOP;
     END IF;
   END Create_Serial_Object__;
-
+  --C0446 EntChamuA (END)
+  
   PROCEDURE Create_Ext_Load_Forecast(info_         IN OUT NOCOPY VARCHAR2,
                                      load_file_id_ IN NUMBER) IS
   
