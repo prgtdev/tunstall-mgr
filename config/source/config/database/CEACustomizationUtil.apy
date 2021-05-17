@@ -738,28 +738,6 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
   END Create_Serial_Object__;
   --C0446 EntChamuA (END)
   
-  PROCEDURE Create_Ext_Load_Forecast(info_         IN OUT NOCOPY VARCHAR2,
-                                     load_file_id_ IN NUMBER) IS
-  
-    objversion_ VARCHAR2(3200);
-    objid_      VARCHAR2(3200);
-    infos_      VARCHAR2(3200);
-    attr_       VARCHAR2(3200);
-    flag_       VARCHAR2(3200);
-    row_state_  VARCHAR2(2);
-    error_text_ VARCHAR2(2000);
-  
-    CURSOR get_info_ IS
-      SELECT *
-        FROM ext_file_trans_tab b
-       WHERE load_file_id = load_file_id_
-         AND row_state = '2'
-         AND EXISTS (SELECT *
-                FROM COMPANY_SITE_TAB a
-               WHERE a.CONTRACT = b.C1
-                 and a.COMPANY = b.C4)
-       ORDER BY row_no;
-  
   FUNCTION Transf_Part_To_Inv_Part(target_key_ref_ IN VARCHAR2,
                                    service_name_   IN VARCHAR2)
     RETURN VARCHAR2 IS
