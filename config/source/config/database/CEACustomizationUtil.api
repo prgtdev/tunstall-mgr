@@ -197,6 +197,14 @@ FUNCTION Check_Cause_Discount(wo_no_   IN NUMBER,
    FUNCTION Check_Escalated_CM(company_    IN VARCHAR2,
                               credit_manager_ IN VARCHAR2,
                               identity_       IN VARCHAR2) return varchar2;
+   
+   FUNCTION Get_Period_Target(credit_analyst_ IN VARCHAR2,
+                             company_        IN VARCHAR2,
+                             target_period_  IN VARCHAR2) return NUMBER;
+    
+   FUNCTION Get_Cash_Collected(credit_analyst_ IN VARCHAR2,
+                             company_        IN VARCHAR2,
+                             target_period_  IN VARCHAR2) return NUMBER; 
   --C0368 END
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------

@@ -2577,6 +2577,111 @@ FUNCTION Check_Inv_Header_CA(identity_ IN VARCHAR2, credit_analyst_ IN VARCHAR2,
    RETURN temp_;  
     
   END Check_Escalated_CM;
+  
+  FUNCTION Get_Period_Target(credit_analyst_ IN VARCHAR2,
+                             company_        IN VARCHAR2,
+                             target_period_  IN VARCHAR2) return NUMBER
+  
+   IS
+    month_ VARCHAR2(5);
+    year_  VARCHAR2(10);
+    target_ NUMBER;
+  
+    CURSOR get_target_info(year_ NUMBER) IS
+      SELECT t.*
+        FROM CREDIT_TARGETS_CLV t
+       WHERE t.CF$_COMPANY = company_
+         AND cf$_credit_analyst_code_db in
+             (select objkey
+                from CREDIT_ANALYST
+               where CREDIT_ANALYST_CODE = credit_analyst_);
+  
+  BEGIN
+    if (target_period_ is not null) then
+      select Substr(target_period_, 1, Instr(target_period_, '-') - 1)
+        into month_
+        from dual;
+    
+      select Substr(target_period_, Instr(target_period_, '-') + 1)
+        into year_
+        from dual;
+
+    end if;
+    
+    FOR rec_ IN get_target_info(to_number(year_)) LOOP
+      
+      IF( month_ ='01')THEN 
+                target_ := rec_.CF$_TARGET_JAN ;
+          ELSIF (month_ ='02')THEN
+                target_ := rec_.CF$_TARGET_FEB ;
+            ELSIF ( month_ ='03' )THEN 
+                target_ := rec_.CF$_TARGET_MARCH ;
+            ELSIF ( month_ ='04')THEN
+                target_ := rec_.CF$_TARGET_APRIL ;
+            ELSIF ( month_ ='05') THEN 
+                target_ := rec_.CF$_TARGET_MAY ;
+            ELSIF ( month_ ='06')THEN 
+                target_ := rec_.CF$_TARGET_JUNE ;
+            ELSIF ( month_ ='07')THEN 
+                target_ := rec_.CF$_TARGET_JULLY ;
+            ELSIF ( month_ ='08')THEN 
+                 target_ := rec_.CF$_TARGET_AUG ;
+            ELSIF ( month_ ='09')THEN 
+                target_ := rec_.CF$_TARGET_SEPT ;
+            ELSIF ( month_ ='10')THEN 
+                 target_ := rec_.CF$_TARGET_OCT ;
+            ELSIF ( month_ ='11')THEN 
+                target_ := rec_.CF$_TARGET_NOV ;
+            ELSIF ( month_ ='12')THEN 
+             target_ := rec_.CF$_TARGET_DEC ;
+           END IF;   
+                  
+    END LOOP;
+    
+    RETURN target_;
+  END Get_Period_Target;
+
+
+  FUNCTION Get_Cash_Collected(credit_analyst_ IN VARCHAR2,
+                             company_        IN VARCHAR2,
+                             target_period_  IN VARCHAR2) return NUMBER
+  
+   IS
+   month_ VARCHAR2(05);
+   year_  VARCHAR2(10);
+   cash_collected_ number;
+   
+   CURSOR get_cash_collected (in_company_ VARCHAR2, year_ VARCHAR2, month_ VARCHAR2, credit_analyst_ VARCHAR2)IS
+   SELECT SUM(a.CURR_AMOUNT)
+   FROM PAYMENT_PER_CURRENCY_CU_QRY a,LEDGER_TRANSACTION_CU_QRY b
+   WHERE  CUSTOMER_CREDIT_INFO_API.Get_Credit_Analyst_Code(a.company, b.IDENTITY) =credit_analyst_
+   AND a.SERIES_ID in ('CUPAY')
+   AND a.company = in_company_
+   AND  a.company = b.COMPANY
+   AND a.series_id = b.SERIES_ID
+   AND a.currency = b.CURRENCY   
+   AND b.LEDGER_COMPANY = a.company   
+   AND (TO_CHAR(a.PAY_DATE, 'YYYY') = year_ AND TO_CHAR(a.PAY_DATE, 'MM') = month_);
+  
+  BEGIN
+     IF (target_period_ is not null) THEN
+        SELECT Substr(target_period_, 1, Instr(target_period_, '-') - 1)
+        INTO month_
+        FROM dual;
+    
+        SELECT Substr(target_period_, Instr(target_period_, '-') + 1)
+        INTO year_
+        FROM dual;
+
+    END IF;
+    
+    OPEN get_cash_collected(company_,year_,month_,credit_analyst_);
+    FETCH get_cash_collected INTO cash_collected_;
+    CLOSE get_cash_collected;
+    
+    RETURN NVL(cash_collected_,0);
+    
+  END Get_Cash_Collected;
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------
 -----------------------------------------------------------------------------
