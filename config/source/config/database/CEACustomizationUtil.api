@@ -205,7 +205,11 @@ FUNCTION Check_Cause_Discount(wo_no_   IN NUMBER,
                              company_        IN VARCHAR2,
                              target_period_  IN VARCHAR2) return NUMBER; 
    --C0368 END 
-
+   
+   FUNCTION Get_Part_Hierachy__(
+      part_no_       IN VARCHAR2,
+      contract_      IN VARCHAR2,
+      eng_chg_level_ IN VARCHAR2) RETURN VARCHAR2 DETERMINISTIC;
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------
 -----------------------------------------------------------------------------
