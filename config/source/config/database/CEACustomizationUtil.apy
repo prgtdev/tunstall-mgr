@@ -422,6 +422,8 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
                                    rec_.CF$_OBJECT_CREATED,
                                    rec_.objid,
                                    rec_.real_ship_date);
+            temps_ := 0;
+
           ELSE
           
             Create_Functional_Object_(rec_.catalog_no,
@@ -436,6 +438,8 @@ PROCEDURE Bulk_Update_Invoice_Header_Notes__(company_  IN VARCHAR2,
                                       rec_.buy_qty_due,
                                       rec_.CF$_OBJECT_CREATED,
                                       rec_.objid);
+            temps_ := 0;
+
           END IF;
           CLOSE check_serialized;
         END IF;
