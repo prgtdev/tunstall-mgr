@@ -83,10 +83,12 @@ PROCEDURE Create_Functional_Object_(
    object_created_ in VARCHAR2,
    col_objid_      IN VARCHAR2);
   --C0446 EntChamuA (END)
-
+  
+  --C0317 EntChamuA (START)
 FUNCTION Transf_Part_To_Inv_Part(
    target_key_ref_ IN VARCHAR2,
    service_name_   IN VARCHAR2) RETURN VARCHAR2;
+ --C0317 EntChamuA (END)
 
 FUNCTION Get_Update_Follow_Up_Date_Sql__(
    calender_id_    IN VARCHAR2,
@@ -144,11 +146,13 @@ FUNCTION Get_Allowed_Tax_Codes__(
    catalog_no_ IN VARCHAR2) RETURN VARCHAR2;
 
 --C0380 EntPrageG (END)
-
+ 
+--C0566 EntChamuA (START)
 FUNCTION Transf_Mansup_Attach_To_PO(
    target_key_ref_ IN VARCHAR2,
    service_name_   IN VARCHAR2) RETURN VARCHAR2;
-    
+--C0566 EntChamuA (END)
+
 FUNCTION Get_Inv_Part_Barcode_Rep_Head RETURN VARCHAR2;
   
 FUNCTION Get_Location_Inv_Part_Barcode(
