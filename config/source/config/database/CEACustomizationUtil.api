@@ -132,11 +132,13 @@ PROCEDURE Copy_Circuit_Reference__(
 
 PROCEDURE Close_Non_Finance_User_Group;
 
+--C0613 EntChathI (START)
 FUNCTION Check_Cause_Discount(
    wo_no_   IN NUMBER,
    company_ IN varchar2,
    site_    IN VARCHAR2,
    type_    IN varchar2) return VARCHAR2 ;
+--C0613 EntChathI (END)
 
 --C0380 EntPrageG (START)
 
@@ -163,8 +165,10 @@ PROCEDURE Create_Functional_Object__ (
    project_id_     IN VARCHAR2,
    sub_project_id_ IN VARCHAR2);
    
- PROCEDURE Sales_Contract_Auto_Closure;
- --C0367 START
+--C0335 EntChathI (START)
+PROCEDURE Sales_Contract_Auto_Closure;
+--C0335 EntChathI (END)
+--C0367 EntChathI (START)
  
 FUNCTION Check_Inv_Header_CA(
    identity_       IN VARCHAR2, 
@@ -203,9 +207,9 @@ FUNCTION Check_Credit_Escalated_FC(
    company_        IN VARCHAR2,
    credit_analyst_ IN VARCHAR2,
    identity_       IN VARCHAR2) RETURN VARCHAR2;
-  --C0367 END
+ --C0367 EntChathI (END)
   
-  --C0368 START
+--C0368 EntChathI (START)
 FUNCTION Check_Credit_Note_Queries_CM(
    company_    IN VARCHAR2,
    credit_manager_ IN VARCHAR2,
@@ -250,7 +254,7 @@ FUNCTION Get_Cash_Collected(
    credit_analyst_ IN VARCHAR2,
    company_        IN VARCHAR2,
    target_period_  IN VARCHAR2) RETURN NUMBER; 
---C0368 END 
+--C0368 EntChathI (END) 
 
 --C0401 EntPrageG (START)
    

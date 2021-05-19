@@ -1106,88 +1106,89 @@ BEGIN
    END LOOP;
 END Close_Non_Finance_User_Group;
 
+--C0613 EntChathI (START)
 FUNCTION Check_Cause_Discount(
    wo_no_   IN NUMBER,
    company_ IN varchar2,
    site_    IN VARCHAR2,
-   type_    IN varchar2) return VARCHAR2 IS
+   type_    IN VARCHAR2) return VARCHAR2 IS
 
    temp_               VARCHAR2(5) := 'FALSE';
-   cause_discount_     number;
-   material_discount_  number;
-   personnel_discount_ number;
-   cause_objkey_       varchar2(2000);
+   cause_discount_     NUMBER;
+   material_discount_  NUMBER;
+   personnel_discount_ NUMBER;
+   cause_objkey_       VARCHAR2(2000);
 
-   cursor get_wo_tasks is
-      select task_seq
-        from JT_TASK_UIV_CFV
-       where wo_no = wo_no_
-         and company like NVL(company_, '%')
-         and site like NVL(site_, '%')
-         and ERROR_CAUSE is not null
-         and CF$_SERVICE_PACKAGE is not null;
+   CURSOR get_wo_tasks is
+      SELECT task_seq
+        FROM JT_TASK_UIV_CFV
+       WHERE wo_no = wo_no_
+         AND company LIKE NVL(company_, '%')
+         AND site LIKE NVL(site_, '%')
+         AND ERROR_CAUSE IS NOT NULL
+         AND CF$_SERVICE_PACKAGE IS NOT NULL;
 
-   cursor get_cause_details(in_wo_no_ number, task_seq_ number) is
+   CURSOR get_cause_details(in_wo_no_ NUMBER, task_seq_ NUMBER) IS
       SELECT cf$_material_discount, cf$_personnel_discount
-        FROM SERVICE_PACKAGE_DETAIL_CLT
-       WHERE cf$_cause in
-             (select objkey
-                from IFSAPP.MAINTENANCE_CAUSE_CODE
-               where ERR_CAUSE in (select ERROR_CAUSE
-                                     from IFSAPP.JT_TASK_UIV_CFV
-                                    where wo_no = in_wo_no_
-                                      and TASK_SEQ = task_seq_))
-         and CF$_SERVICE_PACKAGE in
-             (select OBJKEY
-                from IFSAPP.SERVICE_PACKAGE_CLV
-               where CF$_NAME in (select CF$_SERVICE_PACKAGE
-                                    from IFSAPP.JT_TASK_UIV_CFV
-                                   where wo_no = in_wo_no_
-                                     and TASK_SEQ = task_seq_));
+        FROM service_package_detail_clt
+       WHERE cf$_cause IN
+             (SELECT objkey
+                FROM maintenance_cause_code
+               WHERE err_cause IN (SELECT error_cause
+                                     FROM jt_task_uiv_cfv
+                                    WHERE wo_no = in_wo_no_
+                                      AND task_seq = task_seq_))
+         AND cf$_service_package in
+             (SELECT objkey
+                FROM service_package_clv
+               WHERE CF$_NAME IN (SELECT cf$_service_package
+                                    FROM jt_task_uiv_cfv
+                                   WHERE wo_no = in_wo_no_
+                                     AND task_seq = task_seq_));
 
-   cursor get_wo_task_cause(in_wo_no_ number) is
-      select error_cause, REPORTED_OBJ_CONN_ROWKEY
-        from JT_TASK_UIV
-       where wo_no = in_wo_no_
-         and error_cause is not null;
+   CURSOR get_wo_task_cause(in_wo_no_ NUMBER) IS
+      SELECT error_cause, reported_obj_conn_rowkey
+        FROM jt_task_uiv
+       WHERE wo_no = in_wo_no_
+         AND error_cause IS NOT NULL;
 
-   cursor get_cause(error_cause_            varchar2,
-                  reported_obj_conn_rowkey_ varchar2) is
-      select objkey
-        from SERVICE_PACKAGE_DETAIL_CLV t
-       where cf$_cause = error_cause_
-         and cf$_Service_package =
-             Jt_Task_Cfp.Get_Cf$_Service_Package(reported_obj_conn_rowkey_);
+   CURSOR get_cause(error_cause_            VARCHAR2,
+                  reported_obj_conn_rowkey_ VARCHAR2) IS
+      SELECT objkey
+        FROM SERVICE_PACKAGE_DETAIL_CLV t
+       WHERE cf$_cause = error_cause_
+         AND cf$_Service_package = Jt_Task_Cfp.Get_Cf$_Service_Package(reported_obj_conn_rowkey_);
 
 BEGIN
 
-   for tasks_ in get_wo_tasks loop
-   if (get_wo_tasks%notfound) then
-     temp_ := 'FALSE';
-     exit;
-   else
-     open get_cause_details(wo_no_, tasks_.task_seq);
-     fetch get_cause_details
-       into material_discount_, personnel_discount_;
-     close get_cause_details;
+   FOR tasks_ IN get_wo_tasks LOOP
+      IF (get_wo_tasks%notfound) THEN 
+         temp_ := 'FALSE';
+         EXIT;
+      ELSE
+         OPEN get_cause_details(wo_no_, tasks_.task_seq);
+        FETCH get_cause_details
+         INTO material_discount_, personnel_discount_;
+        CLOSE get_cause_details;
 
-     if (type_ = 'Chargeable') then
-       if (material_discount_ = 0 and personnel_discount_ = 0) then
-         temp_ := 'TRUE';
-         exit;
-       end if;
-     elsif (type_ = 'Non-Chargeable') then
-       if (material_discount_ = 1 and personnel_discount_ = 1) then
-         temp_ := 'TRUE';
-         exit;
-       end if;
-     end if;
-   end if;
+        IF (type_ = 'Chargeable') THEN
+          IF (material_discount_ = 0 and personnel_discount_ = 0) THEN
+            temp_ := 'TRUE';
+            EXIT;
+          END IF;
+        ELSIF (type_ = 'Non-Chargeable') THEN
+          IF (material_discount_ = 1 and personnel_discount_ = 1) THEN
+            temp_ := 'TRUE';
+            EXIT;
+          END IF;
+        END IF;
+      END IF;
 
-   end loop;
+   END LOOP;
 
    RETURN temp_;
 END Check_Cause_Discount;
+--C0613 EntChathI (END)
 
 --C0380 EntPrageG (START)
 
@@ -1560,204 +1561,223 @@ BEGIN
    END LOOP;
 END Create_Functional_Object__;
   
-PROCEDURE Sales_Contract_Auto_Closure 
-IS
-  
-   remaining_amt_        NUMBER := 0;
-   open_afp_exist_       VARCHAR2(5);
-   total_paid_           NUMBER := 0;
-   contract_sales_value_ NUMBER := 0;
-
-   valid_to_close_ boolean := true;
-   state_          varchar2(10);
-   attr_    VARCHAR2(32000);
-   afp_no_   NUMBER;
-
-   $IF (Component_Apppay_SYS.INSTALLED) $THEN
+--C0335 EntChathI (START)
+   PROCEDURE Sales_Contract_Auto_Closure IS
+   
+      remaining_amt_        NUMBER := 0;
+      open_afp_exist_       VARCHAR2(5);
+      total_paid_           NUMBER := 0;
+      contract_sales_value_ NUMBER := 0;
+   
+      valid_to_close_ BOOLEAN := true;
+      state_          VARCHAR2(10);
+      attr_           VARCHAR2(32000);
+      afp_no_         NUMBER;
+   
+      $IF (Component_Apppay_SYS.INSTALLED) $THEN
       temp_afp_no_      NUMBER;
       payment_per_curr_ NUMBER;
-      info_ varchar2(32000):=null;
-
-      CURSOR cur_codes(contract_no varchar2) IS
+      info_             VARCHAR2(32000) := null;
+   
+      CURSOR cur_codes(contract_no VARCHAR2) IS
          SELECT DISTINCT (currency_code)
-         FROM app_for_payment
-         WHERE contract_no = contract_no;
-
-
-      CURSOR get_remaining_amount(contract_no_ varchar2, afp_no_ number) IS
+           FROM app_for_payment
+          WHERE contract_no = contract_no;
+   
+      CURSOR get_remaining_amount(contract_no_ VARCHAR2, afp_no_ NUMBER) IS
          SELECT SUM(App_For_Payment_API.Get_Tot_Ret_Remaining(contract_no_,
-                                                         afp_no_))
-         FROM app_for_payment
-         WHERE contract_no = contract_no
-         AND objstate <> 'Cancelled'
-         GROUP BY currency_code, supply_country, project_id, billing_seq;
-   $END
-
-   CURSOR get_eligible_sales_contrcts IS
-      SELECT *
-      FROM (select t.*
-             from SALES_CONTRACT t
-            where APP_FOR_PAYMENT_API.Get_Tot_Remaining_Ret_Per_Con(CONTRACT_NO) = 0
-              and state not in ('Cancelled', 'Closed')
-              and exists
-            (select 1
-                     from APP_FOR_PAYMENT_MAIN p
-                    where FIN_RELEASED_ALL = 'TRUE'
-                      and p.CONTRACT_NO = t.CONTRACT_NO)
-           UNION
-           select t.*
-             from SALES_CONTRACT t
-            where state not in ('Cancelled', 'Closed')
-              and INT_RETENTION = 0
-                 -- to check if any APF exist and then check fully invoiced
-              and exists (select 1
-                     from app_for_payment_tab
-                    where contract_no = t.contract_no)
-              and not exists
-            (select 1
-                     from APP_FOR_PAYMENT_MAIN p
-                    where STATE not in ('Fully Paid')
-                      and p.CONTRACT_NO = t.CONTRACT_NO))
-                      ;
-BEGIN
-   state_ := 'Closed';
-
-   FOR rec_ IN get_eligible_sales_contrcts LOOP
-
-      Client_SYS.Clear_Attr(attr_);
-
-      -- The contract must be in the Completed status to be eligible to close
-      IF (rec_.state not in ('Completed')) THEN
-         valid_to_close_ := false;
-         Client_SYS.Add_To_Attr('CF$_ERROR_REPORTED','Sales Order must be in Completed status.', attr_);
-         IFSAPP.SALES_CONTRACT_CFP.Cf_Modify__(info_, rec_.objid,attr_,'','DO');
-         CONTINUE;
-      END IF;
-      --check for core closure validations    
-      --**** START validate
-      $IF (Component_Apppay_SYS.INSTALLED) $THEN
-
-         select max(afp_no) into afp_no_
-         FROM app_for_payment WHERE contract_no = rec_.contract_no   AND objstate <> 'Cancelled';
-
+                                                              afp_no_))
+           FROM app_for_payment
+          WHERE contract_no = contract_no
+            AND objstate <> 'Cancelled'
+          GROUP BY currency_code, supply_country, project_id, billing_seq;
+      $END
+   
+      CURSOR get_eligible_sales_contrcts IS
+         SELECT *
+           FROM (SELECT t.*
+                   FROM SALES_CONTRACT t
+                  WHERE APP_FOR_PAYMENT_API.Get_Tot_Remaining_Ret_Per_Con(CONTRACT_NO) = 0
+                    AND state NOT IN ('Cancelled', 'Closed')
+                    AND EXISTS
+                  (SELECT 1
+                           FROM APP_FOR_PAYMENT_MAIN p
+                          WHERE FIN_RELEASED_ALL = 'TRUE'
+                            AND p.CONTRACT_NO = t.CONTRACT_NO)
+                 UNION
+                 SELECT t.*
+                   FROM SALES_CONTRACT t
+                  WHERE state NOT IN ('Cancelled', 'Closed')
+                    AND INT_RETENTION = 0
+                       -- to check if any APF exist and then check fully invoiced
+                    AND EXISTS (SELECT 1
+                           FROM app_for_payment_tab
+                          WHERE contract_no = t.contract_no)
+                    AND NOT EXISTS
+                  (SELECT 1
+                           FROM APP_FOR_PAYMENT_MAIN p
+                          WHERE STATE NOT IN ('Fully Paid')
+                            AND p.CONTRACT_NO = t.CONTRACT_NO));
+   BEGIN
+      state_ := 'Closed';
+   
+      FOR rec_ IN get_eligible_sales_contrcts LOOP
+      
+         Client_SYS.Clear_Attr(attr_);
+      
+         -- The contract must be in the Completed status to be eligible to close
+         IF (rec_.state not in ('Completed')) THEN
+            valid_to_close_ := false;
+            Client_SYS.Add_To_Attr('CF$_ERROR_REPORTED',
+                                   'Sales Order must be in Completed status.',
+                                   attr_);
+            SALES_CONTRACT_CFP.Cf_Modify__(info_,rec_.objid,attr_,'','DO');
+            CONTINUE;
+         END IF;
+         --check for core closure validations    
+         -- START validate
+         $IF (Component_Apppay_SYS.INSTALLED) $THEN
+      
+         SELECT max(afp_no)
+           INTO afp_no_
+           FROM app_for_payment
+          WHERE contract_no = rec_.contract_no
+            AND objstate <> 'Cancelled';
+      
          OPEN get_remaining_amount(rec_.contract_no, afp_no_);
          FETCH get_remaining_amount
-         INTO remaining_amt_;
+            INTO remaining_amt_;
          CLOSE get_remaining_amount;
-
+      
          open_afp_exist_ := App_For_Payment_API.Check_Open_Afp_Exist(rec_.contract_no);
-
+      
          FOR item_ IN cur_codes(rec_.contract_no) LOOP
             temp_afp_no_      := App_For_Payment_API.Get_Latest_Afp_No_Curr(rec_.contract_no,
-                                                                           item_.currency_code);
+                                                                            item_.currency_code);
             payment_per_curr_ := Afp_Payment_API.Get_App_Paid_To_Date(rec_.company,
-                                                                     rec_.contract_no,
-                                                                     temp_afp_no_);
+                                                                      rec_.contract_no,
+                                                                      temp_afp_no_);
             total_paid_       := total_paid_ + payment_per_curr_;
          END LOOP;
-      $END
-
-      IF (open_afp_exist_ = 'TRUE') THEN
-         valid_to_close_ := false;
-         Client_SYS.Add_To_Attr('CF$_ERROR_REPORTED','There are application for payments not in Fully Paid or Cancelled statuses.', attr_);
-
-         IFSAPP.SALES_CONTRACT_CFP.Cf_Modify__(info_, rec_.objid,attr_,'','DO');
-         CONTINUE;
-      END IF;
-
-      IF (remaining_amt_ != 0) THEN
-         valid_to_close_ := false;
-         Client_SYS.Add_To_Attr('CF$_ERROR_REPORTED','The retention is not released fully in application for payments.', attr_);
-
-         IFSAPP.SALES_CONTRACT_CFP.Cf_Modify__(info_, rec_.objid,attr_,'','DO');         CONTINUE;
-
-      END IF;
-
+         $END
+      
+         IF (open_afp_exist_ = 'TRUE') THEN
+            valid_to_close_ := false;
+            Client_SYS.Add_To_Attr('CF$_ERROR_REPORTED',
+                                   'There are application for payments not in Fully Paid or Cancelled statuses.',
+                                   attr_);
+         
+            SALES_CONTRACT_CFP.Cf_Modify__(info_,rec_.objid, attr_,'','DO');
+            CONTINUE;
+         END IF;
+      
+         IF (remaining_amt_ != 0) THEN
+            valid_to_close_ := false;
+            Client_SYS.Add_To_Attr('CF$_ERROR_REPORTED',
+                                   'The retention is not released fully in application for payments.',
+                                   attr_);
+         
+            SALES_CONTRACT_CFP.Cf_Modify__(info_,rec_.objid,attr_,'','DO');
+            CONTINUE;
+         
+         END IF;
+      
          contract_sales_value_ := Contract_Revision_Util_API.Get_Contract_Sales_Value_Co(rec_.contract_no,
-                                                                                      Contract_Revision_Util_API.Get_Active_Revision(rec_.contract_no));
-
-      IF (NVL(contract_sales_value_,0) > NVL(total_paid_,0)) THEN
-         valid_to_close_ := false;
-         Client_SYS.Add_To_Attr('CF$_ERROR_REPORTED','The total paid amount on all applications must be equal to (or higher) than the total contract sales value.', attr_);
-
-         IFSAPP.SALES_CONTRACT_CFP.Cf_Modify__(info_, rec_.objid,attr_,'','DO'); 
-         CONTINUE;
-      END IF;
-      --**** END validate
-      --*** START finaite state set
-      IF (valid_to_close_) THEN
-         -- Finite_State_Set
-         UPDATE sales_contract_tab
-           SET rowstate = state_, rowversion = sysdate
-         WHERE contract_no = rec_.contract_no;
-         rec_.objstate := state_;
-      END IF;
-      --*** END Finite state set
-      --*** START Calculate_Revenue
-      IF (Contract_Project_API.Has_Connected_Activity(rec_.contract_no) = 'TRUE') THEN
-         Contract_Project_API.Calculate_Revenue(rec_.contract_no);
-      END IF;
-      --*** END Calculate_Revenue
-   END LOOP;
-END Sales_Contract_Auto_Closure;
+                                                                                         Contract_Revision_Util_API.Get_Active_Revision(rec_.contract_no));
+      
+         IF (NVL(contract_sales_value_, 0) > NVL(total_paid_, 0)) THEN
+            valid_to_close_ := false;
+            Client_SYS.Add_To_Attr('CF$_ERROR_REPORTED',
+                                   'The total paid amount on all applications must be equal to (or higher) than the total contract sales value.',
+                                   attr_);
+         
+            SALES_CONTRACT_CFP.Cf_Modify__(info_,rec_.objid,attr_,'','DO');
+            CONTINUE;
+         END IF;
+         -- END validate
+         -- START finaite state set
+         IF (valid_to_close_) THEN
+            -- Finite_State_Set
+            UPDATE sales_contract_tab
+               SET rowstate = state_, rowversion = sysdate
+             WHERE contract_no = rec_.contract_no;
+            rec_.objstate := state_;
+         END IF;
+         -- END Finite state set
+         -- START Calculate_Revenue
+         IF (Contract_Project_API.Has_Connected_Activity(rec_.contract_no) =
+            'TRUE') THEN
+            Contract_Project_API.Calculate_Revenue(rec_.contract_no);
+         END IF;
+         -- END Calculate_Revenue
+      END LOOP;
+   END Sales_Contract_Auto_Closure;
+--C0335 EntChathI (END)
   
+--C0367 EntChathI (START)  
 FUNCTION Check_Inv_Header_CA(
    identity_       IN VARCHAR2, 
    credit_analyst_ IN VARCHAR2, 
    company_ IN VARCHAR2) RETURN VARCHAR2
 IS
   
-   follow_up_date_ date;
-   status_ varchar2(100);
-   inv_state_ varchar2(100);
+   follow_up_date_ DATE;
+   status_ VARCHAR2(100);
+   inv_state_ VARCHAR2(100);
    inv_due_ DATE;
-   balance_ number;
-   credit_note_ number;
-   amount_due_ number;
-   temp_ varchar2(5):='FALSE';
+   balance_ NUMBER;
+   credit_note_ NUMBER;
+   amount_due_ NUMBER;
+   temp_ VARCHAR2(5):='FALSE';
 
-   CURSOR get_inv_headers (identity_ varchar2,  credit_analyst_  VARCHAR2, company_  VARCHAR2)IS
-      SELECT * FROM OUTGOING_INVOICE_QRY
-      WHERE identity=identity_
-      and CUSTOMER_CREDIT_INFO_API.Get_Credit_Analyst_Code(company_, identity_)LIKE NVL(credit_analyst_,'%')
-      AND company = company_;
+   CURSOR get_inv_headers(identity_     VARCHAR2,
+                        credit_analyst_ VARCHAR2,
+                        company_        VARCHAR2) IS
+      SELECT company, identity, invoice_id
+        FROM outgoing_invoice_qry
+       WHERE identity = identity_
+         AND Customer_Credit_Info_API.Get_Credit_Analyst_Code(company_,identity_) LIKE  NVL(credit_analyst_, '%')
+         AND company = company_;
 
-   CURSOR get_inv_header_notes (company_ varchar2, identity_ varchar2, invoice_id_ number )is
-      select * from (
-      select 1 AS EXIST, FOLLOW_UP_DATE, IFSAPP.CREDIT_NOTE_STATUS_API.Get_Note_Status_Description(COMPANY,NOTE_STATUS_ID) 
-      from IFSAPP.INVOICE_HEADER_NOTES
-      where COMPANY =company_
-      and IDENTITY = identity_
-      and PARTY_TYPE = 'Customer'
-      and INVOICE_ID = invoice_id_ 
-      order by FOLLOW_UP_DATE desc, note_id desc 
-      )where ROWNUM  =1;
+   CURSOR get_inv_header_notes (company_ VARCHAR2, identity_ VARCHAR2, invoice_id_ NUMBER )IS
+      SELECT * 
+        FROM (SELECT 1 AS exist, follow_up_date, Credit_Note_Status_API.Get_Note_Status_Description(company,note_status_id)
+                FROM invoice_header_notes
+               WHERE company =company_
+                 AND identity = identity_
+                 AND party_type = 'Customer'
+                 AND invoice_id = invoice_id_ 
+            ORDER BY follow_up_date DESC, note_id DESC 
+            )
+        WHERE rownum  =1;
 
-   CURSOR get_inv_info(company_ varchar2, identity_ varchar2, invoice_id_ number )IS
-      SELECT INV_STATE, DUE_DATE
-      FROM INVOICE_LEDGER_ITEM_CU_QRY
-      WHERE COMPANY =company_
-      AND (IDENTITY = identity_ AND INVOICE_ID = invoice_id_ );
+   CURSOR get_inv_info(company_ VARCHAR2, identity_ VARCHAR2, invoice_id_ NUMBER )IS
+      SELECT inv_state, due_date
+        FROM invoice_ledger_item_cu_qry
+       WHERE company =company_
+         AND (identity = identity_ AND invoice_id = invoice_id_ );
 
 
-   CURSOR get_acount_due(company_ varchar2, identity_ varchar2)IS
+   CURSOR get_acount_due(company_ VARCHAR2, identity_ VARCHAR2)IS
       SELECT NVL(Ledger_Item_Util_API.Get_Dom_Amount_Due(
                                    company,
                                    identity,
                                    Party_Type_API.Decode(party_type), SYSDATE), 0) amount_due
-                                   , BALANCE
-      FROM IDENTITY_PAY_INFO_CU_QRY
-      where company = company_
-      AND identity = identity_;
+                                   , balance
+        FROM identity_pay_info_cu_qry
+       WHERE company = company_
+         AND identity = identity_;
   
 BEGIN
-   FOR rec_ in get_inv_headers(identity_,credit_analyst_ , company_ ) LOOP
-      OPEN get_inv_header_notes(rec_.company, rec_.identity,rec_.invoice_id);
-      FETCH get_inv_header_notes into credit_note_,follow_up_date_, status_;
+   FOR rec_ IN get_inv_headers(identity_,credit_analyst_ , company_ ) LOOP
+       OPEN get_inv_header_notes(rec_.company, rec_.identity,rec_.invoice_id);
+      FETCH get_inv_header_notes 
+       INTO credit_note_,follow_up_date_, status_;
       CLOSE get_inv_header_notes;
 
-      OPEN  get_inv_info(rec_.company, rec_.identity,rec_.invoice_id);
-      FETCH  get_inv_info INTO inv_state_,inv_due_;
+       OPEN  get_inv_info(rec_.company, rec_.identity,rec_.invoice_id);
+      FETCH  get_inv_info 
+       INTO inv_state_,inv_due_;
       CLOSE get_inv_info;
 
       IF(follow_up_date_ IS NOT NULL AND follow_up_date_<= SYSDATE AND 
@@ -1789,13 +1809,13 @@ FUNCTION Get_Largest_Overdue_Debt(
 IS 
    temp_ NUMBER;
  
-   CURSOR get_inv_info(company_ varchar2, identity_ varchar2)IS
-      SELECT  MAX(OPEN_AMOUNT)
-      FROM INVOICE_LEDGER_ITEM_CU_QRY
-      WHERE COMPANY =company_
-      AND IDENTITY = identity_
-      AND INV_STATE NOT IN ('Preliminary', 'Cancelled', 'PaidPosted')
-      AND DUE_DATE< SYSDATE ;
+   CURSOR get_inv_info(company_ VARCHAR2, identity_ VARCHAR2) IS
+      SELECT MAX(open_amount)
+        FROM invoice_ledger_item_cu_qry
+       WHERE company = company_
+         AND identity = identity_
+         AND inv_state NOT IN ('Preliminary', 'Cancelled', 'PaidPosted')
+         AND due_date < SYSDATE;
   
 BEGIN
    OPEN get_inv_info (company_,identity_);
@@ -1809,23 +1829,25 @@ FUNCTION Get_Oldest_Overdue_Debt(
    identity_ IN VARCHAR2, 
    company_  IN VARCHAR2) RETURN VARCHAR2
 IS 
-  temp_ NUMBER; 
-  CURSOR get_inv_info(company_ varchar2, identity_ varchar2)IS 
-     SELECT * FROM ( 
-     SELECT OPEN_AMOUNT
-     FROM INVOICE_LEDGER_ITEM_CU_QRY
-     WHERE COMPANY =company_
-     AND IDENTITY = identity_  
-     AND INV_STATE NOT IN ('Preliminary', 'Cancelled', 'PaidPosted')
-     AND DUE_DATE in (SELECT min(DUE_DATE)  FROM INVOICE_LEDGER_ITEM_CU_QRY
-     WHERE COMPANY =company_
-     AND IDENTITY = identity_
-     AND INV_STATE NOT IN ('Preliminary', 'Cancelled', 'PaidPosted')
-     AND DUE_DATE <SYSDATE
-     AND OPEN_AMOUNT>0
-     )order by open_amount desc
-     ) WHERE ROWNUM= 1
-     ;
+   temp_ NUMBER; 
+   
+   CURSOR get_inv_info(company_ VARCHAR2, identity_ VARCHAR2) IS
+         SELECT *
+           FROM (SELECT open_amount
+                   FROM invoice_ledger_item_cu_qry
+                  WHERE company = company_
+                    AND identity = identity_
+                    AND inv_state NOT IN ('Preliminary', 'Cancelled', 'PaidPosted')
+                    AND due_date in
+                        (SELECT min(due_date)
+                           FROM invoice_ledger_item_cu_qry
+                          WHERE company = company_
+                            AND identity = identity_
+                            AND inv_state NOT IN('Preliminary', 'Cancelled', 'PaidPosted')
+                            AND due_date < SYSDATE
+                            AND open_amount > 0)
+                  ORDER BY open_amount DESC)
+          WHERE ROWNUM = 1;
 BEGIN
    OPEN get_inv_info (company_,identity_);
    FETCH get_inv_info INTO temp_;
@@ -1841,27 +1863,29 @@ IS
  
    temp_ DATE;
 
-   CURSOR get_inv_info(company_ varchar2, identity_ varchar2)IS 
-      SELECT  MIN(FOLLOW_UP_DATE) from 
-      INVOICE_HEADER_NOTES
-      WHERE INVOICE_ID IN (
-      SELECT * FROM ( 
-      SELECT INVOICE_ID FROM  invoice_tab t
-      WHERE  party_type = 'CUSTOMER'
-      AND    EXISTS (SELECT 1 FROM user_finance_auth_pub WHERE t.company = company_)
-      AND  identity=identity_
-      AND company = company_
-      AND exists ( SELECT 1 
-                  FROM INVOICE_LEDGER_ITEM_CU_QRY
-                  WHERE COMPANY =company_
-                  AND IDENTITY = identity_
-                  AND INVOICE_ID = t.invoice_id 
-                  AND INV_STATE NOT IN ('Preliminary', 'Cancelled', 'PaidPosted')
-                  and DUE_DATE<sysdate
-                  )
-      order by creation_date asc   
-      ) where rownum=1  
-      )    ;       
+      CURSOR get_inv_info(company_ VARCHAR2, identity_ VARCHAR2) IS
+         SELECT MIN(follow_up_date)
+           FROM invoice_header_notes
+          WHERE invoice_id IN
+                (SELECT *
+                   FROM (SELECT invoice_id
+                           FROM invoice_tab t
+                          WHERE party_type = 'CUSTOMER'
+                            AND EXISTS (SELECT 1
+                                          FROM user_finance_auth_pub
+                                         WHERE t.company = company_)
+                            AND identity = identity_
+                            AND company = company_
+                            AND EXISTS
+                                (SELECT 1
+                                   FROM invoice_ledger_item_cu_qry
+                                  WHERE company = company_
+                                    AND identity = identity_
+                                    AND invoice_id = t.invoice_id
+                                    AND inv_state NOT IN('Preliminary','Cancelled','PaidPosted')
+                                    and due_date < sysdate)
+                          ORDER BY creation_date ASC)
+                  WHERE rownum = 1);     
 BEGIN
    OPEN get_inv_info (company_,identity_);
    FETCH get_inv_info INTO temp_;
@@ -1877,29 +1901,28 @@ FUNCTION Check_Credit_Escalated(
 IS
    status_ varchar2(100);
    temp_   varchar2(5) := 'FALSE';
-   CURSOR get_inv_headers(identity_       varchar2,
+   
+   CURSOR get_inv_headers(identity_     VARCHAR2,
                         credit_analyst_ VARCHAR2,
                         company_        VARCHAR2) IS
-   SELECT *
-     FROM OUTGOING_INVOICE_QRY
-    WHERE identity = identity_
-      and CUSTOMER_CREDIT_INFO_API.Get_Credit_Analyst_Code(company_,
-                                                           identity_) LIKE NVL(credit_analyst_,'%')
-      AND company = company_;
+      SELECT company, identity, invoice_id
+        FROM outgoing_invoice_qry
+       WHERE identity = identity_
+         AND Customer_Credit_Info_API.Get_Credit_Analyst_Code(company_,identity_) LIKE  NVL(credit_analyst_, '%')
+         AND company = company_;
 
-   CURSOR get_inv_header_notes(company_    varchar2,
-                             identity_   varchar2,
-                             invoice_id_ number) is
-      select *
-        from (select IFSAPP.CREDIT_NOTE_STATUS_API.Get_Note_Status_Description(COMPANY,
-                                                                               NOTE_STATUS_ID)
-                from IFSAPP.INVOICE_HEADER_NOTES
-               where COMPANY = company_
-                 and IDENTITY = identity_
-                 and PARTY_TYPE = 'Customer'
-                 and INVOICE_ID = invoice_id_
-               order by FOLLOW_UP_DATE desc, note_id desc)
-       where ROWNUM = 1;
+   CURSOR get_inv_header_notes(company_  VARCHAR2,
+                             identity_   VARCHAR2,
+                             invoice_id_ NUMBER) IS
+      SELECT *
+        FROM (SELECT Credit_Note_Status_API.Get_Note_Status_Description(company,note_status_id)
+                FROM invoice_header_notes
+               WHERE company = company_
+                 AND identity = identity_
+                 AND party_type = 'Customer'
+                 AND invoice_id = invoice_id_
+               ORDER BY follow_up_date DESC, note_id DESC)
+       WHERE rownum = 1;
 
 BEGIN
    FOR rec_ in get_inv_headers(identity_, credit_analyst_, company_) LOOP
@@ -1922,76 +1945,71 @@ FUNCTION Check_Credit_Note_Queries(
    company_        IN VARCHAR2,
    credit_analyst_ IN VARCHAR2,
    identity_       IN VARCHAR2,
-   type_           IN varchar2) RETURN VARCHAR2 IS
-    follow_up_date_ date;
-    status_         varchar2(100);
-    inv_state_      varchar2(100);
-    temp_           varchar2(5) := 'FALSE';
+   type_           IN VARCHAR2) RETURN VARCHAR2 IS
+   
+    follow_up_date_ DATE;
+    status_         VARCHAR2(100);
+    inv_state_      VARCHAR2(100);
+    temp_           VARCHAR2(5) := 'FALSE';
 
-   CURSOR get_inv_headers(identity_       varchar2,
+   CURSOR get_inv_headers(identity_     VARCHAR2,
                         credit_analyst_ VARCHAR2,
                         company_        VARCHAR2) IS
-      SELECT *
-        FROM OUTGOING_INVOICE_QRY
+      SELECT company, identity, invoice_id
+        FROM outgoing_invoice_qry
        WHERE identity = identity_
-         and CUSTOMER_CREDIT_INFO_API.Get_Credit_Analyst_Code(company_,
-                                                              identity_) LIKE
-             NVL(credit_analyst_, '%')
+         AND Customer_Credit_Info_API.Get_Credit_Analyst_Code(company_,identity_) LIKE  NVL(credit_analyst_, '%')
          AND company = company_;
 
-   CURSOR get_inv_header_notes(company_    varchar2,
-                             identity_   varchar2,
-                             invoice_id_ number) is
-      select *
-        from (select FOLLOW_UP_DATE,
-                     IFSAPP.CREDIT_NOTE_STATUS_API.Get_Note_Status_Description(COMPANY,
-                                                                               NOTE_STATUS_ID)
-                from IFSAPP.INVOICE_HEADER_NOTES
-               where COMPANY = company_
-                 and IDENTITY = identity_
-                 and PARTY_TYPE = 'Customer'
-                 and INVOICE_ID = invoice_id_
-               order by FOLLOW_UP_DATE desc, note_id desc)
-       where ROWNUM = 1;
+   CURSOR get_inv_header_notes(company_  VARCHAR2,
+                             identity_   VARCHAR2,
+                             invoice_id_ NUMBER) IS
+      SELECT *
+        FROM (SELECT follow_up_date, Credit_Note_Status_API.Get_Note_Status_Description(company,note_status_id)
+                FROM invoice_header_notes
+               WHERE company = company_
+                 AND identity = identity_
+                 AND party_type = 'Customer'
+                 AND invoice_id = invoice_id_
+               ORDER BY follow_up_date DESC, note_id DESC)
+       WHERE rownum = 1;
 
-   CURSOR get_inv_info(company_    varchar2,
-                     identity_   varchar2,
-                     invoice_id_ number) IS
-      SELECT INV_STATE
-        FROM INVOICE_LEDGER_ITEM_CU_QRY
-       WHERE COMPANY = company_
-         AND (IDENTITY = identity_ AND INVOICE_ID = invoice_id_);
+   CURSOR get_inv_info(company_  VARCHAR2,
+                     identity_   VARCHAR2,
+                     invoice_id_ NUMBER) IS
+      SELECT inv_state
+        FROM invoice_ledger_item_cu_qry
+       WHERE company = company_
+         AND (identity = identity_ AND invoice_id = invoice_id_);
 
-   CURSOR get_credit_note(company_ varchar2, identity_ varchar2) IS
+   CURSOR get_credit_note(company_ VARCHAR2, identity_ VARCHAR2) IS
       SELECT 1
-        FROM CUSTOMER_CREDIT_NOTE
-       where company = company_
+        FROM customer_credit_note
+       WHERE company = company_
          AND customer_id = identity_;
 
 BEGIN
    FOR rec_ in get_inv_headers(identity_, credit_analyst_, company_) LOOP
-      OPEN get_inv_header_notes(rec_.company,
-                                rec_.identity,
-                                rec_.invoice_id);
+       OPEN get_inv_header_notes(rec_.company,rec_.identity,rec_.invoice_id);
       FETCH get_inv_header_notes
-        into follow_up_date_, status_;
+       INTO follow_up_date_, status_;
       CLOSE get_inv_header_notes;
 
       OPEN get_inv_info(rec_.company, rec_.identity, rec_.invoice_id);
-      FETCH get_inv_info
-        INTO inv_state_;
-      CLOSE get_inv_info;
+     FETCH get_inv_info
+      INTO inv_state_;
+     CLOSE get_inv_info;
 
       IF (type_ = 'Open') THEN
          IF (follow_up_date_ IS NOT NULL AND follow_up_date_ > SYSDATE AND
-            status_ in ('In Query') AND
+            status_ IN ('In Query') AND
             inv_state_ NOT IN ('Preliminary', 'Cancelled', 'PaidPosted')) THEN
            temp_ := 'TRUE';
            EXIT;
          END IF;
       ELSIF (type_ = 'Overdue') THEN
          IF (follow_up_date_ IS NOT NULL AND follow_up_date_ < SYSDATE AND
-            status_ in ('In Query') AND
+            status_ IN ('In Query') AND
             inv_state_ NOT IN ('Preliminary', 'Cancelled', 'PaidPosted')) THEN
            temp_ := 'TRUE';
            EXIT;
@@ -2008,37 +2026,33 @@ FUNCTION Check_Credit_Legal(
 IS  
    status_ varchar2(100);
    temp_   varchar2(5) := 'FALSE';
-   CURSOR get_inv_headers(identity_       varchar2,
+   
+   CURSOR get_inv_headers(identity_     VARCHAR2,
                         credit_analyst_ VARCHAR2,
                         company_        VARCHAR2) IS
-      SELECT *
-        FROM OUTGOING_INVOICE_QRY
+      SELECT company, identity, invoice_id
+        FROM outgoing_invoice_qry
        WHERE identity = identity_
-         and CUSTOMER_CREDIT_INFO_API.Get_Credit_Analyst_Code(company_,
-                                                              identity_) LIKE
-             NVL(credit_analyst_, '%')
+         AND Customer_Credit_Info_API.Get_Credit_Analyst_Code(company_,identity_) LIKE  NVL(credit_analyst_, '%')
          AND company = company_;
 
-   CURSOR get_inv_header_notes(company_    varchar2,
-                             identity_   varchar2,
-                             invoice_id_ number) is
-      select *
-        from (select IFSAPP.CREDIT_NOTE_STATUS_API.Get_Note_Status_Description(COMPANY,
-                                                                               NOTE_STATUS_ID)
-                from IFSAPP.INVOICE_HEADER_NOTES
-               where COMPANY = company_
-                 and IDENTITY = identity_
-                 and PARTY_TYPE = 'Customer'
-                 and INVOICE_ID = invoice_id_
-               order by FOLLOW_UP_DATE desc, note_id desc)
-       where ROWNUM = 1;
+   CURSOR get_inv_header_notes(company_  VARCHAR2,
+                             identity_   VARCHAR2,
+                             invoice_id_ NUMBER) IS
+      SELECT *
+        FROM (SELECT Credit_Note_Status_API.Get_Note_Status_Description(company,note_status_id)
+                FROM invoice_header_notes
+               WHERE company = company_
+                 AND identity = identity_
+                 AND party_type = 'Customer'
+                 AND invoice_id = invoice_id_
+               ORDER BY follow_up_date DESC, note_id DESC)
+       WHERE rownum = 1;
   
 BEGIN
   
    FOR rec_ in get_inv_headers(identity_, credit_analyst_, company_) LOOP
-      OPEN get_inv_header_notes(rec_.company,
-                                rec_.identity,
-                                rec_.invoice_id);
+      OPEN get_inv_header_notes(rec_.company,rec_.identity,rec_.invoice_id);
       FETCH get_inv_header_notes
         into status_;
       CLOSE get_inv_header_notes;
@@ -2058,41 +2072,37 @@ FUNCTION Check_Credit_Escalated_FC(
    identity_       IN VARCHAR2) RETURN VARCHAR2 
 IS
   
-   status_ varchar2(100);
-   temp_   varchar2(5) := 'FALSE';
-   CURSOR get_inv_headers(identity_     varchar2,
+   status_ VARCHAR2(100);
+   temp_   VARCHAR2(5) := 'FALSE';
+   
+   CURSOR get_inv_headers(identity_     VARCHAR2,
                         credit_analyst_ VARCHAR2,
                         company_        VARCHAR2) IS
-      SELECT *
-        FROM OUTGOING_INVOICE_QRY
+      SELECT company, identity, invoice_id
+        FROM outgoing_invoice_qry
        WHERE identity = identity_
-         and CUSTOMER_CREDIT_INFO_API.Get_Credit_Analyst_Code(company_,
-                                                              identity_) LIKE
-             NVL(credit_analyst_, '%')
+         AND Customer_Credit_Info_API.Get_Credit_Analyst_Code(company_,identity_) LIKE  NVL(credit_analyst_, '%')
          AND company = company_;
 
-   CURSOR get_inv_header_notes(company_  varchar2,
-                             identity_   varchar2,
-                             invoice_id_ number) is
-      select *
-        from (select IFSAPP.CREDIT_NOTE_STATUS_API.Get_Note_Status_Description(COMPANY,
-                                                                               NOTE_STATUS_ID)
-                from IFSAPP.INVOICE_HEADER_NOTES
-               where COMPANY = company_
-                 and IDENTITY = identity_
-                 and PARTY_TYPE = 'Customer'
-                 and INVOICE_ID = invoice_id_
-               order by FOLLOW_UP_DATE desc, note_id desc)
-       where ROWNUM = 1;
+   CURSOR get_inv_header_notes(company_  VARCHAR2,
+                             identity_   VARCHAR2,
+                             invoice_id_ NUMBER) IS
+      SELECT *
+        FROM (SELECT Credit_Note_Status_API.Get_Note_Status_Description(company,note_status_id)
+                FROM invoice_header_notes
+               WHERE company = company_
+                 AND identity = identity_
+                 AND party_type = 'Customer'
+                 AND invoice_id = invoice_id_
+               ORDER BY follow_up_date DESC, note_id DESC)
+       WHERE rownum = 1;
   
 BEGIN
   
-   FOR rec_ in get_inv_headers(identity_, credit_analyst_, company_) LOOP
-      OPEN get_inv_header_notes(rec_.company,
-                                rec_.identity,
-                                rec_.invoice_id);
+   FOR rec_ IN get_inv_headers(identity_, credit_analyst_, company_) LOOP
+      OPEN get_inv_header_notes(rec_.company,rec_.identity,rec_.invoice_id);
       FETCH get_inv_header_notes
-        into status_;
+       INTO status_;
       CLOSE get_inv_header_notes;
 
       IF (status_ IN ('Escalated to Finance Controller')) THEN
@@ -2102,63 +2112,56 @@ BEGIN
    END LOOP;
    RETURN temp_;
 END Check_Credit_Escalated_FC;
-  
+--C0367 EntChathI (END)
+--C0368 EntChathI (START)
 FUNCTION Check_Credit_Note_Queries_CM(
    company_        IN VARCHAR2,
    credit_manager_ IN VARCHAR2,
    identity_       IN VARCHAR2,
-   type_           IN varchar2) RETURN VARCHAR2 
+   type_           IN VARCHAR2) RETURN VARCHAR2 
 IS
-   follow_up_date_ date;
-   status_         varchar2(100);
-   inv_state_      varchar2(100);
-   temp_           varchar2(5) := 'FALSE';
+   follow_up_date_ DATE;
+   status_         VARCHAR2(100);
+   inv_state_      VARCHAR2(100);
+   temp_           VARCHAR2(5) := 'FALSE';
 
-   CURSOR get_inv_headers(identity_       varchar2,
-                        credit_manager_ VARCHAR2,
-                        company_        VARCHAR2) IS
-      SELECT *
-        FROM OUTGOING_INVOICE_QRY
+
+   CURSOR get_inv_headers(identity_ VARCHAR2, credit_manager_ VARCHAR2,company_ VARCHAR2) IS
+      SELECT company, identity, invoice_id
+        FROM outgoing_invoice_qry
        WHERE identity = identity_
-         and CUSTOMER_CREDIT_INFO_API.Get_Manager(company_,
-                                                  identity_) LIKE
-             NVL(credit_manager_, '%')
-         AND company = company_;
+       AND company = company_
+       AND Customer_Credit_Info_API.Get_Manager(company_,identity_) LIKE  NVL(credit_manager_, '%') ;
+   
+   CURSOR get_inv_header_notes(company_  VARCHAR2, identity_ VARCHAR2, invoice_id_ NUMBER) IS
+      SELECT *
+      FROM (SELECT follow_up_date,
+                  Credit_Note_Status_API.Get_Note_Status_Description(company,note_status_id)
+                FROM invoice_header_notes
+               WHERE company = company_
+                 AND identity = identity_
+                 AND party_type = 'Customer'
+                 AND invoice_id = invoice_id_
+               ORDER BY follow_up_date DESC, note_id DESC)
+       WHERE rownum = 1;
 
-   CURSOR get_inv_header_notes(company_    varchar2,
-                             identity_   varchar2,
-                             invoice_id_ number) is
-      select *
-        from (select FOLLOW_UP_DATE,
-                     IFSAPP.CREDIT_NOTE_STATUS_API.Get_Note_Status_Description(COMPANY,
-                                                                               NOTE_STATUS_ID)
-                from IFSAPP.INVOICE_HEADER_NOTES
-               where COMPANY = company_
-                 and IDENTITY = identity_
-                 and PARTY_TYPE = 'Customer'
-                 and INVOICE_ID = invoice_id_
-               order by FOLLOW_UP_DATE desc, note_id desc)
-       where ROWNUM = 1;
-
-   CURSOR get_inv_info(company_    varchar2,
-                     identity_   varchar2,
-                     invoice_id_ number) IS
+   CURSOR get_inv_info(company_  VARCHAR2,
+                     identity_   VARCHAR2,
+                     invoice_id_ NUMBER) IS
       SELECT INV_STATE
         FROM INVOICE_LEDGER_ITEM_CU_QRY
        WHERE COMPANY = company_
          AND (IDENTITY = identity_ AND INVOICE_ID = invoice_id_);
 
-   CURSOR get_credit_note(company_ varchar2, identity_ varchar2) IS
+   CURSOR get_credit_note(company_ VARCHAR2, identity_ VARCHAR2) IS
       SELECT 1
         FROM CUSTOMER_CREDIT_NOTE
-       where company = company_
+       WHERE company = company_
          AND customer_id = identity_;
   
 BEGIN
    FOR rec_ in get_inv_headers(identity_, credit_manager_, company_) LOOP
-      OPEN get_inv_header_notes(rec_.company,
-                          rec_.identity,
-                          rec_.invoice_id);
+      OPEN get_inv_header_notes(rec_.company,rec_.identity,rec_.invoice_id);
       FETCH get_inv_header_notes
       into follow_up_date_, status_;
       CLOSE get_inv_header_notes;
@@ -2191,73 +2194,65 @@ END Check_Credit_Note_Queries_CM;
 FUNCTION Check_Cr_Note_Queries_All_CM(
    company_    IN VARCHAR2,
    identity_   IN VARCHAR2,
-   type_       IN varchar2) RETURN VARCHAR2 
+   type_       IN VARCHAR2) RETURN VARCHAR2 
 IS
-   follow_up_date_ date;
-   status_         varchar2(100);
-   inv_state_      varchar2(100);
-   temp_           varchar2(5) := 'FALSE';
+   follow_up_date_ DATE;
+   status_         VARCHAR2(100);
+   inv_state_      VARCHAR2(100);
+   temp_           VARCHAR2(5) := 'FALSE';
 
-   CURSOR get_inv_headers(identity_  varchar2,
-                     company_        VARCHAR2) IS
-   SELECT *
-      FROM OUTGOING_INVOICE_QRY
-      WHERE identity = identity_
-      AND company = company_;
+   CURSOR get_inv_headers(identity_ VARCHAR2, company_ VARCHAR2) IS
+      SELECT company, identity, invoice_id
+        FROM outgoing_invoice_qry
+       WHERE identity = identity_
+         AND company = company_;
 
-   CURSOR get_inv_header_notes(company_    varchar2,
-                          identity_   varchar2,
-                          invoice_id_ number) is
-      select *
-      from (select FOLLOW_UP_DATE,
-                  IFSAPP.CREDIT_NOTE_STATUS_API.Get_Note_Status_Description(COMPANY,
-                                                                            NOTE_STATUS_ID)
-             from IFSAPP.INVOICE_HEADER_NOTES
-            where COMPANY = company_
-              and IDENTITY = identity_
-              and PARTY_TYPE = 'Customer'
-              and INVOICE_ID = invoice_id_
-            order by FOLLOW_UP_DATE desc, note_id desc)
-      where ROWNUM = 1;
+   CURSOR get_inv_header_notes(company_  VARCHAR2, identity_ VARCHAR2, invoice_id_ NUMBER) IS
+      SELECT *
+      FROM (SELECT follow_up_date,
+                  Credit_Note_Status_API.Get_Note_Status_Description(company,note_status_id)
+                FROM invoice_header_notes
+               WHERE company = company_
+                 AND identity = identity_
+                 AND party_type = 'Customer'
+                 AND invoice_id = invoice_id_
+               ORDER BY follow_up_date DESC, note_id DESC)
+       WHERE rownum = 1;
 
-   CURSOR get_inv_info(company_    varchar2,
-                  identity_   varchar2,
-                  invoice_id_ number) IS
+   CURSOR get_inv_info(company_  VARCHAR2,identity_  VARCHAR2, invoice_id_ NUMBER) IS
    SELECT INV_STATE
-      FROM INVOICE_LEDGER_ITEM_CU_QRY
-      WHERE COMPANY = company_
-      AND (IDENTITY = identity_ AND INVOICE_ID = invoice_id_);
+      FROM invoice_ledger_item_cu_qry
+      WHERE company = company_
+      AND (identity = identity_ AND invoice_id = invoice_id_);
 
-   CURSOR get_credit_note(company_ varchar2, identity_ varchar2) IS
+   CURSOR get_credit_note(company_ VARCHAR2, identity_ VARCHAR2) IS
       SELECT 1
-      FROM CUSTOMER_CREDIT_NOTE
-      where company = company_
+      FROM customer_credit_note
+      WHERE company = company_
       AND customer_id = identity_;
   
 BEGIN
-   FOR rec_ in get_inv_headers(identity_, company_) LOOP
-      OPEN get_inv_header_notes(rec_.company,
-                                rec_.identity,
-                                rec_.invoice_id);
+   FOR rec_ IN get_inv_headers(identity_, company_) LOOP
+      OPEN get_inv_header_notes(rec_.company,rec_.identity,rec_.invoice_id);
       FETCH get_inv_header_notes
-        into follow_up_date_, status_;
+       INTO follow_up_date_, status_;
       CLOSE get_inv_header_notes;
 
       OPEN get_inv_info(rec_.company, rec_.identity, rec_.invoice_id);
       FETCH get_inv_info
-        INTO inv_state_;
+       INTO inv_state_;
       CLOSE get_inv_info;
 
       IF (type_ = 'Open') THEN
          IF (follow_up_date_ IS NOT NULL AND follow_up_date_ > SYSDATE AND
-            status_ in ('In Query') AND
+            status_ IN ('In Query') AND
             inv_state_ NOT IN ('Preliminary', 'Cancelled', 'PaidPosted')) THEN
             temp_ := 'TRUE';
             EXIT;
          END IF;
       ELSIF (type_ = 'Overdue') THEN
          IF (follow_up_date_ IS NOT NULL AND follow_up_date_ < SYSDATE AND
-            status_ in ('In Query') AND
+            status_ IN ('In Query') AND
             inv_state_ NOT IN ('Preliminary', 'Cancelled', 'PaidPosted')) THEN
             temp_ := 'TRUE';
             EXIT;
@@ -2274,37 +2269,41 @@ FUNCTION Check_Inv_Header_CM(
    company_ IN VARCHAR2) RETURN VARCHAR2
 IS
   
-   follow_up_date_ date;
-   status_ varchar2(100);
-   inv_state_ varchar2(100);
+   follow_up_date_ DATE;
+   status_ VARCHAR2(100);
+   inv_state_ VARCHAR2(100);
    inv_due_ DATE;
-   balance_ number;
-   credit_note_ number;
-   amount_due_ number;
-   temp_ varchar2(5):='FALSE';
+   balance_ NUMBER;
+   credit_note_ NUMBER;
+   amount_due_ NUMBER;
+   temp_ VARCHAR2(5):='FALSE';
 
-   CURSOR get_inv_headers (identity_ varchar2,  credit_analyst_  VARCHAR2, company_  VARCHAR2)IS
-      SELECT * FROM OUTGOING_INVOICE_QRY
-      WHERE identity=identity_
-      and CUSTOMER_CREDIT_INFO_API.Get_Manager(company_, identity_)LIKE NVL(credit_manager_,'%')
-      AND company = company_;
+   CURSOR get_inv_headers(identity_     VARCHAR2,
+                        credit_manager_ VARCHAR2,
+                        company_        VARCHAR2) IS
+      SELECT company, identity, invoice_id
+        FROM outgoing_invoice_qry
+       WHERE identity = identity_
+         AND Customer_Credit_Info_API.Get_Manager(company_,identity_) LIKE  NVL(credit_manager_, '%')
+         AND company = company_;
 
-   CURSOR get_inv_header_notes (company_ varchar2, identity_ varchar2, invoice_id_ number )is
-      select * from (
-      select 1 AS EXIST, FOLLOW_UP_DATE, IFSAPP.CREDIT_NOTE_STATUS_API.Get_Note_Status_Description(COMPANY,NOTE_STATUS_ID) 
-      from IFSAPP.INVOICE_HEADER_NOTES
-      where COMPANY =company_
-      and IDENTITY = identity_
-      and PARTY_TYPE = 'Customer'
-      and INVOICE_ID = invoice_id_ 
-      order by FOLLOW_UP_DATE desc, note_id desc 
-      )where ROWNUM  =1;
+   CURSOR get_inv_header_notes (company_ VARCHAR2, identity_ VARCHAR2, invoice_id_ NUMBER )
+   IS
+      SELECT * FROM (
+      SELECT 1 AS exist, follow_up_date, Credit_Note_Status_API.Get_Note_Status_Description(company,note_status_id)
+      from invoice_header_notes
+      WHERE company = company_
+        AND identity = identity_
+        AND party_type = 'Customer'
+        AND invoice_id = invoice_id_
+      ORDER BY follow_up_date DESC, note_id DESC)
+      WHERE rownum = 1;
 
    CURSOR get_inv_info(company_ varchar2, identity_ varchar2, invoice_id_ number )IS
-      SELECT INV_STATE, DUE_DATE
-      FROM INVOICE_LEDGER_ITEM_CU_QRY
+      SELECT inv_state, due_date
+      FROM invoice_ledger_item_cu_qry
       WHERE COMPANY =company_
-      AND (IDENTITY = identity_ AND INVOICE_ID = invoice_id_ );
+      AND (identity = identity_ AND invoice_id = invoice_id_ );
 
 
    CURSOR get_acount_due(company_ varchar2, identity_ varchar2)IS
@@ -2312,16 +2311,17 @@ IS
                                    company,
                                    identity,
                                    Party_Type_API.Decode(party_type), SYSDATE), 0) amount_due
-                                   , BALANCE
-      FROM IDENTITY_PAY_INFO_CU_QRY
+                                   , balance
+      FROM identity_pay_info_cu_qry
       where company = company_
       AND identity = identity_;
   
 
 BEGIN
-   FOR rec_ in get_inv_headers(identity_,credit_manager_ , company_ ) LOOP
+   FOR rec_ IN get_inv_headers(identity_,credit_manager_ , company_ ) LOOP
       OPEN get_inv_header_notes(rec_.company, rec_.identity,rec_.invoice_id);
-      FETCH get_inv_header_notes into credit_note_,follow_up_date_, status_;
+      FETCH get_inv_header_notes 
+      INTO credit_note_,follow_up_date_, status_;
       CLOSE get_inv_header_notes;
 
       OPEN  get_inv_info(rec_.company, rec_.identity,rec_.invoice_id);
@@ -2359,10 +2359,10 @@ IS
 
    CURSOR get_open_item_count(company_ VARCHAR2 ,credit_analyst_ VARCHAR2 )IS
       SELECT count(INVOICE_ID) Open_Items 
-      FROM INVOICE_LEDGER_ITEM_CU_QRY
-      WHERE COMPANY =company_
-      AND CUSTOMER_CREDIT_INFO_API.Get_Credit_Analyst_Code(company, identity) = credit_analyst_
-      AND INV_STATE NOT IN ('Preliminary', 'Cancelled', 'PaidPosted') ;
+      FROM invoice_ledger_item_cu_qry
+      WHERE company =company_
+      AND Customer_Credit_Info_API.Get_Credit_Analyst_Code(company, identity) = credit_analyst_
+      AND inv_state NOT IN ('Preliminary', 'Cancelled', 'PaidPosted') ;
       
 BEGIN
    OPEN get_open_item_count(company_ ,credit_analyst_);
@@ -2380,36 +2380,36 @@ IS
 
    status_ varchar2(100);
    temp_   varchar2(5) := 'FALSE';
-   CURSOR get_inv_headers(identity_     varchar2,
+   
+   CURSOR get_inv_headers(identity_     VARCHAR2,
                         credit_manager_ VARCHAR2,
                         company_        VARCHAR2) IS
-      SELECT *
-        FROM OUTGOING_INVOICE_QRY
+      SELECT company, identity, invoice_id
+        FROM outgoing_invoice_qry
        WHERE identity = identity_
-         and CUSTOMER_CREDIT_INFO_API.Get_Manager(company_,identity_) LIKE  NVL(credit_manager_, '%')
+         and Customer_Credit_Info_API.Get_Manager(company_,identity_) LIKE  NVL(credit_manager_, '%')
          AND company = company_;
 
-   CURSOR get_inv_header_notes(company_    varchar2,
-                             identity_   varchar2,
-                             invoice_id_ number) is
-      select *
-        from (select IFSAPP.CREDIT_NOTE_STATUS_API.Get_Note_Status_Description(COMPANY,
-                                                                               NOTE_STATUS_ID)
-                from IFSAPP.INVOICE_HEADER_NOTES
-               where COMPANY = company_
-                 and IDENTITY = identity_
-                 and PARTY_TYPE = 'Customer'
-                 and INVOICE_ID = invoice_id_
-               order by FOLLOW_UP_DATE desc, note_id desc)
-       where ROWNUM = 1;
+   CURSOR get_inv_header_notes(company_  VARCHAR2,
+                             identity_   VARCHAR2,
+                             invoice_id_ NUMBER) IS
+      SELECT *
+        FROM (SELECT Credit_Note_Status_API.Get_Note_Status_Description(company,note_status_id)
+                FROM invoice_header_notes
+               WHERE company = company_
+                 AND identity = identity_
+                 AND party_type = 'Customer'
+                 AND invoice_id = invoice_id_
+               ORDER BY follow_up_date DESC, note_id DESC)
+       WHERE rownum = 1;
 BEGIN
 
-   FOR rec_ in get_inv_headers(identity_, credit_manager_, company_) LOOP
+   FOR rec_ IN get_inv_headers(identity_, credit_manager_, company_) LOOP
       OPEN get_inv_header_notes(rec_.company,
                                 rec_.identity,
                                 rec_.invoice_id);
       FETCH get_inv_header_notes
-        into status_;
+       INTO status_;
       CLOSE get_inv_header_notes;
 
       IF (status_ IN ('Legal')) THEN
@@ -2426,33 +2426,33 @@ FUNCTION Check_Cr_Escalated_FC_CM(
    identity_       IN VARCHAR2) RETURN VARCHAR2 
 IS
   
-   status_ varchar2(100);
-   temp_   varchar2(5) := 'FALSE';
-   CURSOR get_inv_headers(identity_       varchar2,
+   status_ VARCHAR2(100);
+   temp_   VARCHAR2(5) := 'FALSE';
+   
+   CURSOR get_inv_headers(identity_     VARCHAR2,
                         credit_manager_ VARCHAR2,
                         company_        VARCHAR2) IS
-      SELECT *
-        FROM OUTGOING_INVOICE_QRY
+      SELECT company, identity, invoice_id
+        FROM outgoing_invoice_qry
        WHERE identity = identity_
-         and CUSTOMER_CREDIT_INFO_API.Get_Manager(company_, identity_) LIKE    NVL(credit_manager_, '%')
+         and Customer_Credit_Info_API.Get_Manager(company_,identity_) LIKE  NVL(credit_manager_, '%')
          AND company = company_;
 
-   CURSOR get_inv_header_notes(company_    varchar2,
-                             identity_   varchar2,
-                             invoice_id_ number) is
-      select *
-        from (select IFSAPP.CREDIT_NOTE_STATUS_API.Get_Note_Status_Description(COMPANY,
-                                                                               NOTE_STATUS_ID)
-                from IFSAPP.INVOICE_HEADER_NOTES
-               where COMPANY = company_
-                 and IDENTITY = identity_
-                 and PARTY_TYPE = 'Customer'
-                 and INVOICE_ID = invoice_id_
-               order by FOLLOW_UP_DATE desc, note_id desc)
-       where ROWNUM = 1;
+   CURSOR get_inv_header_notes(company_  VARCHAR2,
+                             identity_   VARCHAR2,
+                             invoice_id_ NUMBER) IS
+      SELECT *
+        FROM (SELECT Credit_Note_Status_API.Get_Note_Status_Description(company,note_status_id)
+                FROM invoice_header_notes
+               WHERE company = company_
+                 AND identity = identity_
+                 AND party_type = 'Customer'
+                 AND invoice_id = invoice_id_
+               ORDER BY follow_up_date DESC, note_id DESC)
+       WHERE rownum = 1;
   
 BEGIN  
-   FOR rec_ in get_inv_headers(identity_, credit_manager_, company_) LOOP
+   FOR rec_ IN get_inv_headers(identity_, credit_manager_, company_) LOOP
       OPEN get_inv_header_notes(rec_.company,
                                 rec_.identity,
                                 rec_.invoice_id);
@@ -2473,39 +2473,38 @@ FUNCTION Check_Escalated_CM(
    credit_manager_ IN VARCHAR2,
    identity_       IN VARCHAR2) RETURN VARCHAR2 
 IS
-   status_ varchar2(100);
-   temp_   varchar2(5) := 'FALSE';
-   CURSOR get_inv_headers(identity_     varchar2,
+   status_ VARCHAR2(100);
+   temp_   VARCHAR2(5) := 'FALSE';
+   CURSOR get_inv_headers(identity_     VARCHAR2,
                         credit_manager_ VARCHAR2,
                         company_        VARCHAR2) IS
-      SELECT *
-        FROM OUTGOING_INVOICE_QRY
+      SELECT company, identity, invoice_id
+        FROM outgoing_invoice_qry
        WHERE identity = identity_
-         and CUSTOMER_CREDIT_INFO_API.Get_Manager(company_,identity_) LIKE  NVL(credit_manager_, '%')
+         and Customer_Credit_Info_API.Get_Manager(company_,identity_) LIKE  NVL(credit_manager_, '%')
          AND company = company_;
 
-   CURSOR get_inv_header_notes(company_  varchar2,
-                             identity_   varchar2,
-                             invoice_id_ number) is
-      select *
-        from (select IFSAPP.CREDIT_NOTE_STATUS_API.Get_Note_Status_Description(COMPANY,
-                                                                               NOTE_STATUS_ID)
-                from IFSAPP.INVOICE_HEADER_NOTES
-               where COMPANY = company_
-                 and IDENTITY = identity_
-                 and PARTY_TYPE = 'Customer'
-                 and INVOICE_ID = invoice_id_
-               order by FOLLOW_UP_DATE desc, note_id desc)
-       where ROWNUM = 1;
+   CURSOR get_inv_header_notes(company_  VARCHAR2,
+                             identity_   VARCHAR2,
+                             invoice_id_ NUMBER) IS
+      SELECT *
+        FROM (SELECT Credit_Note_Status_API.Get_Note_Status_Description(company,note_status_id)
+                FROM invoice_header_notes
+               WHERE company = company_
+                 AND identity = identity_
+                 AND party_type = 'Customer'
+                 AND invoice_id = invoice_id_
+               ORDER BY follow_up_date DESC, note_id DESC)
+       WHERE rownum = 1;
 
 BEGIN
 
-   FOR rec_ in get_inv_headers(identity_, credit_manager_, company_) LOOP
+   FOR rec_ IN get_inv_headers(identity_, credit_manager_, company_) LOOP
       OPEN get_inv_header_notes(rec_.company,
                                 rec_.identity,
                                 rec_.invoice_id);
       FETCH get_inv_header_notes
-        into status_;
+        INTO status_;
       CLOSE get_inv_header_notes;
 
       IF (status_ IN ('Escalated to Credit Manager','Escalated to Credit Manager' )) THEN
@@ -2517,108 +2516,114 @@ RETURN temp_;
 
 END Check_Escalated_CM;
   
-FUNCTION Get_Period_Target(
-   credit_analyst_ IN VARCHAR2,
-   company_        IN VARCHAR2,
-   target_period_  IN VARCHAR2) RETURN NUMBER  
+FUNCTION Get_Period_Target(credit_analyst_ IN VARCHAR2,
+                           company_        IN VARCHAR2,
+                           target_period_  IN VARCHAR2) RETURN NUMBER
 IS
-   month_ VARCHAR2(5);
-   year_  VARCHAR2(10);
-   target_ NUMBER;
+      month_  VARCHAR2(5);
+      year_   VARCHAR2(10);
+      target_ NUMBER;
+   
+      CURSOR get_target_info(year_ NUMBER) IS
+         SELECT t.*
+           FROM credit_targets_clv t
+          WHERE t.CF$_COMPANY = company_
+            AND cf$_credit_analyst_code_db in
+                (select objkey
+                   from credit_analyst
+                  where credit_analyst_code = credit_analyst_);
+   
+   BEGIN
+      IF (target_period_ IS NOT NULL) then
+         SELECT SUBSTR(target_period_, 1, Instr(target_period_, '-') - 1)
+           INTO month_
+           FROM dual;
+      
+         SELECT SUBSTR(target_period_, Instr(target_period_, '-') + 1)
+           INTO year_
+           FROM dual;
+      
+      END IF;
+   
+      FOR rec_ IN get_target_info(to_number(year_)) LOOP
+      
+         IF (month_ = '01') THEN
+            target_ := rec_.CF$_TARGET_JAN;
+         ELSIF (month_ = '02') THEN
+            target_ := rec_.CF$_TARGET_FEB;
+         ELSIF (month_ = '03') THEN
+            target_ := rec_.CF$_TARGET_MARCH;
+         ELSIF (month_ = '04') THEN
+            target_ := rec_.CF$_TARGET_APRIL;
+         ELSIF (month_ = '05') THEN
+            target_ := rec_.CF$_TARGET_MAY;
+         ELSIF (month_ = '06') THEN
+            target_ := rec_.CF$_TARGET_JUNE;
+         ELSIF (month_ = '07') THEN
+            target_ := rec_.CF$_TARGET_JULLY;
+         ELSIF (month_ = '08') THEN
+            target_ := rec_.CF$_TARGET_AUG;
+         ELSIF (month_ = '09') THEN
+            target_ := rec_.CF$_TARGET_SEPT;
+         ELSIF (month_ = '10') THEN
+            target_ := rec_.CF$_TARGET_OCT;
+         ELSIF (month_ = '11') THEN
+            target_ := rec_.CF$_TARGET_NOV;
+         ELSIF (month_ = '12') THEN
+            target_ := rec_.CF$_TARGET_DEC;
+         END IF;
+      
+      END LOOP;
+   
+      RETURN target_;
+   END Get_Period_Target;
 
-   CURSOR get_target_info(year_ NUMBER) IS
-      SELECT t.*
-        FROM CREDIT_TARGETS_CLV t
-       WHERE t.CF$_COMPANY = company_
-         AND cf$_credit_analyst_code_db in
-             (select objkey
-                from CREDIT_ANALYST
-               where CREDIT_ANALYST_CODE = credit_analyst_);
-  
-BEGIN
- if (target_period_ is not null) then
-   select Substr(target_period_, 1, Instr(target_period_, '-') - 1)
-     into month_
-     from dual;
 
-   select Substr(target_period_, Instr(target_period_, '-') + 1)
-     into year_
-     from dual;
-
- end if;
-
- FOR rec_ IN get_target_info(to_number(year_)) LOOP
-
-   IF( month_ ='01')THEN 
-             target_ := rec_.CF$_TARGET_JAN ;
-       ELSIF (month_ ='02')THEN
-             target_ := rec_.CF$_TARGET_FEB ;
-         ELSIF ( month_ ='03' )THEN 
-             target_ := rec_.CF$_TARGET_MARCH ;
-         ELSIF ( month_ ='04')THEN
-             target_ := rec_.CF$_TARGET_APRIL ;
-         ELSIF ( month_ ='05') THEN 
-             target_ := rec_.CF$_TARGET_MAY ;
-         ELSIF ( month_ ='06')THEN 
-             target_ := rec_.CF$_TARGET_JUNE ;
-         ELSIF ( month_ ='07')THEN 
-             target_ := rec_.CF$_TARGET_JULLY ;
-         ELSIF ( month_ ='08')THEN 
-              target_ := rec_.CF$_TARGET_AUG ;
-         ELSIF ( month_ ='09')THEN 
-             target_ := rec_.CF$_TARGET_SEPT ;
-         ELSIF ( month_ ='10')THEN 
-              target_ := rec_.CF$_TARGET_OCT ;
-         ELSIF ( month_ ='11')THEN 
-             target_ := rec_.CF$_TARGET_NOV ;
-         ELSIF ( month_ ='12')THEN 
-          target_ := rec_.CF$_TARGET_DEC ;
-        END IF;   
-
- END LOOP;
-
-  RETURN target_;
-END Get_Period_Target;
-
-
-FUNCTION Get_Cash_Collected(
-   credit_analyst_ IN VARCHAR2,
-   company_        IN VARCHAR2,
-   target_period_  IN VARCHAR2) RETURN NUMBER
+FUNCTION Get_Cash_Collected(credit_analyst_ IN VARCHAR2,
+                            company_        IN VARCHAR2,
+                            target_period_  IN VARCHAR2) RETURN NUMBER 
 IS
-   month_ VARCHAR2(05);
-   year_  VARCHAR2(10);
-   cash_collected_ number;
-
-   CURSOR get_cash_collected (in_company_ VARCHAR2, year_ VARCHAR2, month_ VARCHAR2, credit_analyst_ VARCHAR2)IS
-      SELECT SUM(a.CURR_AMOUNT)
-      FROM PAYMENT_PER_CURRENCY_CU_QRY a,LEDGER_TRANSACTION_CU_QRY b
-      WHERE  CUSTOMER_CREDIT_INFO_API.Get_Credit_Analyst_Code(a.company, b.IDENTITY) =credit_analyst_
-      AND a.SERIES_ID in ('CUPAY')
-      AND a.company = in_company_
-      AND  a.company = b.COMPANY
-      AND a.series_id = b.SERIES_ID
-      AND a.currency = b.CURRENCY   
-      AND b.LEDGER_COMPANY = a.company   
-      AND (TO_CHAR(a.PAY_DATE, 'YYYY') = year_ AND TO_CHAR(a.PAY_DATE, 'MM') = month_);
-
+                            
+      month_          VARCHAR2(05);
+      year_           VARCHAR2(10);
+      cash_collected_ number;
+   
+      CURSOR get_cash_collected(in_company_     VARCHAR2,
+                                year_           VARCHAR2,
+                                month_          VARCHAR2,
+                                credit_analyst_ VARCHAR2) IS
+         SELECT SUM(a.CURR_AMOUNT)
+           FROM payment_per_currency_cu_qry a, ledger_transaction_cu_qry b
+          WHERE Customer_Credit_Info_API.Get_Credit_Analyst_Code(a.company, b.identity) = credit_analyst_
+            AND a.series_id in ('CUPAY')
+            AND a.company = in_company_
+            AND a.company = b.company
+            AND a.series_id = b.series_id
+            AND a.currency = b.currency
+            AND b.ledger_company = a.company
+            AND (TO_CHAR(a.pay_date, 'YYYY') = year_ AND
+                 TO_CHAR(a.pay_date, 'MM') = month_);
+   
 BEGIN
-   IF (target_period_ is not null) THEN
-      SELECT Substr(target_period_, 1, Instr(target_period_, '-') - 1)
-      INTO month_
-      FROM dual;
-
-      SELECT Substr(target_period_, Instr(target_period_, '-') + 1)
-      INTO year_
-      FROM dual;
-   END IF;
-
-   OPEN get_cash_collected(company_,year_,month_,credit_analyst_);
-   FETCH get_cash_collected INTO cash_collected_;
-   CLOSE get_cash_collected;
-
-  RETURN NVL(cash_collected_,0);
+      IF (target_period_ IS NOT NULL) THEN
+         SELECT SUBSTR(target_period_, 1, Instr(target_period_, '-') - 1)
+           INTO month_
+           FROM dual;
+      
+         SELECT SUBSTR(target_period_, Instr(target_period_, '-') + 1)
+           INTO year_
+           FROM dual;
+      END IF;
+   
+      OPEN get_cash_collected(company_, year_, month_, credit_analyst_);
+      FETCH get_cash_collected
+       INTO cash_collected_;
+      CLOSE get_cash_collected;
+   
+      RETURN NVL(cash_collected_, 0);
 END Get_Cash_Collected;
+
+--C0368 EntChathI (END)
 
 --C0401 EntPrageG (START)
   
