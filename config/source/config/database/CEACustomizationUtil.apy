@@ -1759,14 +1759,10 @@ IS
 
 
    CURSOR get_acount_due(company_ VARCHAR2, identity_ VARCHAR2)IS
-      SELECT NVL(Ledger_Item_Util_API.Get_Dom_Amount_Due(
-                                   company,
-                                   identity,
-                                   Party_Type_API.Decode(party_type), SYSDATE), 0) amount_due
-                                   , balance
+      SELECT amount_due, balance
         FROM identity_pay_info_cu_qry
        WHERE company = company_
-         AND identity = identity_;
+   AND identity = identity_;
   
 BEGIN
    FOR rec_ IN get_inv_headers(identity_,credit_analyst_ , company_ ) LOOP
@@ -2307,11 +2303,7 @@ IS
 
 
    CURSOR get_acount_due(company_ varchar2, identity_ varchar2)IS
-      SELECT NVL(Ledger_Item_Util_API.Get_Dom_Amount_Due(
-                                   company,
-                                   identity,
-                                   Party_Type_API.Decode(party_type), SYSDATE), 0) amount_due
-                                   , balance
+      SELECT amount_due , balance
       FROM identity_pay_info_cu_qry
       where company = company_
       AND identity = identity_;
@@ -2592,17 +2584,18 @@ IS
                                 year_           VARCHAR2,
                                 month_          VARCHAR2,
                                 credit_analyst_ VARCHAR2) IS
-         SELECT SUM(a.CURR_AMOUNT)
-           FROM payment_per_currency_cu_qry a, ledger_transaction_cu_qry b
-          WHERE Customer_Credit_Info_API.Get_Credit_Analyst_Code(a.company, b.identity) = credit_analyst_
-            AND a.series_id in ('CUPAY')
-            AND a.company = in_company_
-            AND a.company = b.company
-            AND a.series_id = b.series_id
-            AND a.currency = b.currency
-            AND b.ledger_company = a.company
-            AND (TO_CHAR(a.pay_date, 'YYYY') = year_ AND
-                 TO_CHAR(a.pay_date, 'MM') = month_);
+      SELECT SUM(a.CURR_AMOUNT)
+        FROM payment_per_currency_cu_qry a
+       WHERE company =in_company_
+         AND SERIES_ID = 'CUPAY'
+         AND (TO_CHAR(a.pay_date, 'YYYY') = year_ AND TO_CHAR(a.pay_date, 'MM') = month_)
+  AND EXISTS 
+      (SELECT 1 FROM LEDGER_TRANSACTION_CU_QRY
+        WHERE company = a.company
+          AND series_id = a.SERIES_ID
+          AND payment_id = a.PAYMENT_ID
+          AND LEDGER_COMPANY =a.company 
+          AND Customer_Credit_Info_API.Get_Credit_Analyst_Code(company, identity) = credit_analyst_);
    
 BEGIN
       IF (target_period_ IS NOT NULL) THEN
