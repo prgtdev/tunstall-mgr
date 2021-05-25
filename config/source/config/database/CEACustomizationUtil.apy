@@ -2840,24 +2840,13 @@ IS
 BEGIN
    
    FOR rec IN get_kitted_parts LOOP
-      DBMS_OUTPUT.Put_Line('AAA rec.order_no-->'||rec.order_no);
-      DBMS_OUTPUT.Put_Line('AAA rec.release_no-->'||rec.release_no);
-      DBMS_OUTPUT.Put_Line('AAA rec.sequence_no-->'||rec.sequence_no);
-      DBMS_OUTPUT.Put_Line('AAA rec.line_item_no-->'||rec.line_item_no);
-      
       Shop_Material_Alloc_API.Reserve(info_, attr_, rec.order_no, rec.release_no, rec.sequence_no, rec.line_item_no);
-      DBMS_OUTPUT.Put_Line('AAA attr_-->'||attr_);
       Client_SYS.Clear_ATTR(attr_);
    END LOOP;
    
    FOR rec_ IN get_kanban_parts LOOP
-      DBMS_OUTPUT.Put_Line('BBBB rec_.order_no-->'||rec_.order_no);
-          DBMS_OUTPUT.Put_Line('BBBB rec_.release_no-->'||rec_.release_no);
-      DBMS_OUTPUT.Put_Line('BBBB rec_.sequence_no-->'||rec_.sequence_no);
-      DBMS_OUTPUT.Put_Line('BBBB rec_.line_item_no-->'||rec_.line_item_no);
       Shop_Material_Alloc_API.Reserve(info_, attr_, rec_.order_no, rec_.release_no, rec_.sequence_no, rec_.line_item_no);
       Client_SYS.Clear_ATTR(attr_);
-      
    END LOOP;
    
 END Reserve_Kitted_Kanban_Parts;
