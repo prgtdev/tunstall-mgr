@@ -272,6 +272,18 @@ FUNCTION Get_Phase_Out_Date__(
    eng_chg_level_ IN VARCHAR2) RETURN DATE DETERMINISTIC;
 
 --C0401 EntPrageG (END)
+  
+-- C0654 EntChamuA (START)
+  FUNCTION Check_Kitted_Reservation_Date(
+   rev_start_date_  IN DATE,
+   contract_        IN VARCHAR2) RETURN VARCHAR2;
+
+PROCEDURE Reserve_Kitted_Kanban_Parts;
+
+FUNCTION Check_Kanban_Reservation_Date(
+   rev_start_date_  IN DATE,
+   contract_        IN VARCHAR2) RETURN VARCHAR2;
+-- C0654 EntChamuA (END)
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------
 -----------------------------------------------------------------------------
