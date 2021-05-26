@@ -2519,7 +2519,8 @@ IS
       CURSOR get_target_info(year_ NUMBER) IS
          SELECT t.*
            FROM credit_targets_clv t
-          WHERE t.CF$_COMPANY = company_
+           WHERE t.cf$_company = company_
+             AND t.cf$_year =year_
             AND cf$_credit_analyst_code_db in
                 (select objkey
                    from credit_analyst
