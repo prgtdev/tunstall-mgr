@@ -1261,44 +1261,6 @@ BEGIN
 END Transf_Mansup_Attach_To_PO;
 --C0566 EntChamuA (END)
 
-  -- C641
-FUNCTION Get_Inv_Part_Barcode_Rep_Head RETURN VARCHAR2 
-IS
-BEGIN 
-  RETURN Language_SYS.Translate_Constant(lu_name_, 'BARCODEREPHEADER: Tunstall - Approved '|| TO_CHAR(SYSDATE, 'DD/MM/YYYY'));
-END  Get_Inv_Part_Barcode_Rep_Head;
-  
--- C641
-Function Get_Location_Inv_Part_Barcode(
-   part_no_  IN VARCHAR2,
-   contract_ IN VARCHAR2) RETURN VARCHAR2 
-IS
-   CURSOR get_location IS
-      SELECT location_no
-      FROM receipt_inv_location ril, inventory_part_barcode ipb
-      WHERE ril.contract = ipb.contract
-      AND ril.part_no = ipb.part_no
-      AND ril.configuration_id = ipb.configuration_id
-      AND ril.lot_batch_no = ipb.lot_batch_no
-      AND ril.serial_no = ipb.serial_no
-      AND ril.eng_chg_level = ipb.eng_chg_level
-      AND ril.waiv_dev_rej_no = ipb.waiv_dev_rej_no
-      AND ril.activity_seq = ipb.activity_seq
-      AND ril.part_no = part_no_
-      AND ril.contract = contract_;  
-
-   location_no_ VARCHAR2(35);        
-BEGIN
-   FOR rec_ IN get_location LOOP
-      location_no_ := rec_.location_no;
-      exit;
-   END LOOP;
-   /*OPEN get_location;
-   FECTH get_location INTO location_no_;
-   CLOSE get_location;*/
-   RETURN location_no_;
-END Get_Location_Inv_Part_Barcode; 
-  
 PROCEDURE Create_Functional_Object__ (
    project_id_     IN VARCHAR2,
    sub_project_id_ IN VARCHAR2)
@@ -2889,6 +2851,23 @@ BEGIN
    RETURN return_;
 END Check_Kanban_Reservation_Date; 
 -- C0654 EntChamuA (END)
+
+-- C0641 EA Maheshi (START)
+FUNCTION Get_Pack_Qty ( 
+   receipt_sequence_ NUMBER) RETURN NUMBER
+IS
+   receipt_info_rec_  Receipt_Info_API.Public_Rec;
+BEGIN
+   receipt_info_rec_  := Receipt_Info_API.Get(receipt_sequence_);
+   IF (receipt_info_rec_.sender_type = Sender_Receiver_Type_API.DB_SUPPLIER) THEN
+      RETURN Purchase_Part_Supplier_API.Get_Standard_Pack_Size(receipt_info_rec_.contract,
+                                                               receipt_info_rec_.source_part_no,
+                                                               receipt_info_rec_.sender);
+   END IF; 
+   RETURN NULL;   
+END Get_Pack_Qty;   
+-- C0641 EA Maheshi (END)
+
 
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------

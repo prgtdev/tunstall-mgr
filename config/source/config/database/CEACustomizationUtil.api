@@ -153,12 +153,6 @@ FUNCTION Transf_Mansup_Attach_To_PO(
    service_name_   IN VARCHAR2) RETURN VARCHAR2;
 --C0566 EntChamuA (END)
 
-FUNCTION Get_Inv_Part_Barcode_Rep_Head RETURN VARCHAR2;
-  
-FUNCTION Get_Location_Inv_Part_Barcode(
-   part_no_ IN VARCHAR2,
-   contract_ IN VARCHAR2) RETURN VARCHAR2;
-
 PROCEDURE Create_Functional_Object__ (
    project_id_     IN VARCHAR2,
    sub_project_id_ IN VARCHAR2);
@@ -282,6 +276,11 @@ FUNCTION Check_Kanban_Reservation_Date(
    rev_start_date_  IN DATE,
    contract_        IN VARCHAR2) RETURN VARCHAR2;
 -- C0654 EntChamuA (END)
+
+-- C0641 EA Maheshi (START)
+FUNCTION Get_Pack_Qty ( 
+   receipt_sequence_ NUMBER) RETURN NUMBER;  
+---- C0641 EA Maheshi (END)   
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------
 -----------------------------------------------------------------------------
