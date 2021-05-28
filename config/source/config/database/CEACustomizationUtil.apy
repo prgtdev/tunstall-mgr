@@ -470,20 +470,21 @@ PROCEDURE Create_Functional_Object_(
    col_objid_      IN VARCHAR2) 
 IS
   
-   status_      VARCHAR2(100);
-   type_        VARCHAR2(100);
-   unit_        VARCHAR2(100);
-   values_      VARCHAR2(10);
-   value_       NUMBER;
-   lot_no_      VARCHAR2(20);
-   func_obj_    VARCHAR2(3200);
-   info_        VARCHAR2(3200);
-   objid_       VARCHAR2(3200);
-   objversion_  VARCHAR2(3200);
-   attr_        VARCHAR2(3200);
-   warr_objkey_ VARCHAR2(3200);
-   contract_2_  VARCHAR2(3200) := '2013';
-
+   status_                VARCHAR2(100);
+   type_                  VARCHAR2(100);
+   unit_                  VARCHAR2(100);
+   values_                VARCHAR2(10);
+   value_                 NUMBER;
+   lot_no_                VARCHAR2(20);
+   func_obj_              VARCHAR2(3200);
+   info_                  VARCHAR2(3200);
+   objid_                 VARCHAR2(3200);
+   objversion_            VARCHAR2(3200);
+   attr_                  VARCHAR2(3200);
+   warr_objkey_           VARCHAR2(3200);
+   contract_2_            VARCHAR2(3200) := '2013';
+   current_sup_mch_code_  VARCHAR2(3200);
+   
    --to get lot number and qty 
    CURSOR get_lot_batch_dets(order_no_   IN VARCHAR2,
                            line_no_    IN VARCHAR2,
@@ -516,8 +517,14 @@ IS
   
    --get objkey of warranty 
    CURSOR get_objkey(values_ IN VARCHAR2) IS
-      select OBJKEY from warranty_clv where CF$_NAME = values_;
-  
+      SELECT OBJKEY FROM warranty_clv WHERE CF$_NAME = values_;
+   
+   --get objid and objversion 
+   CURSOR get_equipment_object_dets(contract_ IN VARCHAR2, mch_code_ IN VARCHAR2) IS
+      SELECT objid, objversion
+        FROM equipment_object
+       WHERE contract = contract_
+         AND mch_code = mch_code_;
 BEGIN
    IF (object_id_ is not null) THEN
 
@@ -558,13 +565,31 @@ BEGIN
       Client_SYS.Add_To_Attr('PRODUCTION_DATE', real_ship_date_, attr_);
       Client_SYS.Add_To_Attr('SUP_MCH_CODE', object_id_, attr_);
       Client_SYS.Add_To_Attr('SUP_CONTRACT', '2013', attr_);
+      
+      IF NOT Equipment_Functional_API.Exists(contract_2_, func_obj_) THEN            
 
-      EQUIPMENT_FUNCTIONAL_API.New__(info_,
+         Equipment_Functional_API.New__(info_,
                                      objid_,
                                      objversion_,
                                      attr_,
                                      'DO');
-
+         
+      ELSE
+         current_sup_mch_code_:= Equipment_Functional_API.Get_Sup_Mch_Code(contract_2_, func_obj_);
+         
+         IF func_obj_ != current_sup_mch_code_ THEN
+            OPEN get_equipment_object_dets (contract_2_, func_obj_);
+            FETCH get_equipment_object_dets INTO objid_, objversion_;
+            CLOSE get_equipment_object_dets;
+            
+            Equipment_Functional_API.Modify__(info_,
+                                     objid_,
+                                     objversion_,
+                                     attr_,
+                                     'DO');
+         END IF;
+      END IF;
+      
       Client_Sys.Clear_Attr(attr_);
 
       IF (values_ is not null) THEN
