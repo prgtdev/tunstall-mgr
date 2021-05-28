@@ -604,15 +604,6 @@ BEGIN
       Client_SYS.Add_To_Attr('CF$_SERVICE_WARRANTY', warr_objkey_, attr_);
       Equipment_Functional_CFP.Cf_Modify__(info_, objid_, attr_, ' ', 'DO');
 
-      info_ := null;
-      Client_Sys.Clear_Attr(attr_);
-      Client_SYS.Add_To_Attr('CF$_OBJECT_CREATED_DB', 'TRUE', attr_);
-
-      Customer_Order_Line_CFP.Cf_Modify__(info_,
-                                          col_objid_,
-                                          attr_,
-                                          ' ',
-                                          'DO');
    END IF;
 END Create_Functional_Object_;
   
@@ -761,11 +752,6 @@ BEGIN
 
          Equipment_Serial_CFP.Cf_Modify__(info_, objid_, attr_, ' ', 'DO');
 
-         info_ := null;
-         Client_Sys.Clear_Attr(attr_);
-         Client_SYS.Add_To_Attr('CF$_OBJECT_CREATED_DB', 'TRUE', attr_);
-
-         Customer_Order_Line_CFP.Cf_Modify__(info_,col_objid_,attr_,' ','DO');
       END LOOP;
    END IF;
 END Create_Serial_Object__;
