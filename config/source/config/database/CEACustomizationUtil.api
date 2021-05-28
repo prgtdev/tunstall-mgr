@@ -65,7 +65,6 @@ PROCEDURE Create_Serial_Object__(
    rel_no_         IN VARCHAR2,
    warranty_id_    IN VARCHAR2,
    object_id_      IN VARCHAR2,
-   object_created_ IN VARCHAR2,
    col_objid_      IN VARCHAR2,
    real_ship_date_ IN DATE);
 
@@ -80,7 +79,6 @@ PROCEDURE Create_Functional_Object_(
    catalog_desc_   IN VARCHAR2,
    contract_       IN VARCHAR2,
    buy_qty_due_    IN NUMBER,
-   object_created_ in VARCHAR2,
    col_objid_      IN VARCHAR2);
   --C0446 EntChamuA (END)
   
