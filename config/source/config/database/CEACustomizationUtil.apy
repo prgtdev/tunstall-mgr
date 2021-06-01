@@ -422,7 +422,7 @@ BEGIN
             INTO seriliazed_;
 
             IF (check_serialized%FOUND) THEN
-
+               
                Create_Serial_Object__(rec_.catalog_no,
                                       order_no_,
                                       rec_.line_no,
@@ -484,6 +484,7 @@ IS
    warr_objkey_           VARCHAR2(3200);
    contract_2_            VARCHAR2(3200) := '2013';
    current_sup_mch_code_  VARCHAR2(3200);
+   attr_2_                VARCHAR2(3200);
    
    --to get lot number and qty 
    CURSOR get_lot_batch_dets(order_no_   IN VARCHAR2,
@@ -574,35 +575,40 @@ BEGIN
                                      attr_,
                                      'DO');
          
+         Client_Sys.Clear_Attr(attr_);
+
+         IF (values_ is not null) THEN
+            OPEN get_objkey(values_);
+            FETCH get_objkey
+             INTO warr_objkey_;
+            CLOSE get_objkey;
+         END IF;
+
+         Client_SYS.Add_To_Attr('CF$_LOT_BATCH_NO', lot_no_, attr_);
+         Client_SYS.Add_To_Attr('CF$_EQUIPMENT_QUANTITY', buy_qty_due_, attr_);
+         Client_SYS.Add_To_Attr('CF$_SERVICE_WARRANTY', warr_objkey_, attr_);
+         Equipment_Functional_CFP.Cf_Modify__(info_, objid_, attr_, ' ', 'DO');
+         
       ELSE
          current_sup_mch_code_:= Equipment_Functional_API.Get_Sup_Mch_Code(contract_2_, func_obj_);
-         
-         IF func_obj_ != current_sup_mch_code_ THEN
+
+         IF object_id_ != current_sup_mch_code_ THEN
             OPEN get_equipment_object_dets (contract_2_, func_obj_);
             FETCH get_equipment_object_dets INTO objid_, objversion_;
             CLOSE get_equipment_object_dets;
             
+            Client_SYS.Add_To_Attr('SUP_MCH_CODE', object_id_, attr_2_);
+
             Equipment_Functional_API.Modify__(info_,
                                      objid_,
                                      objversion_,
-                                     attr_,
+                                     attr_2_,
                                      'DO');
          END IF;
+         IF object_id_ = current_sup_mch_code_  THEN
+            ERROR_SYS.RECORD_GENERAL('CUSTOMERORDERLINE', 'OBJCREATED: No new Functional Objects Created, Functional Objects are already created for Object ID :P1', object_id_);
+         END IF;
       END IF;
-      
-      Client_Sys.Clear_Attr(attr_);
-
-      IF (values_ is not null) THEN
-         OPEN get_objkey(values_);
-         FETCH get_objkey
-          INTO warr_objkey_;
-         CLOSE get_objkey;
-      END IF;
-
-      Client_SYS.Add_To_Attr('CF$_LOT_BATCH_NO', lot_no_, attr_);
-      Client_SYS.Add_To_Attr('CF$_EQUIPMENT_QUANTITY', buy_qty_due_, attr_);
-      Client_SYS.Add_To_Attr('CF$_SERVICE_WARRANTY', warr_objkey_, attr_);
-      Equipment_Functional_CFP.Cf_Modify__(info_, objid_, attr_, ' ', 'DO');
 
    END IF;
 END Create_Functional_Object_;
@@ -2148,7 +2154,7 @@ IS
                             
       month_          VARCHAR2(05);
       year_           VARCHAR2(10);
-      cash_collected_ number;
+      cash_collected_ NUMBER;
    
       CURSOR get_cash_collected(in_company_     VARCHAR2,
                                 year_           VARCHAR2,
@@ -2165,7 +2171,9 @@ IS
           AND series_id = a.SERIES_ID
           AND payment_id = a.PAYMENT_ID
           AND LEDGER_COMPANY =a.company 
-          AND Customer_Credit_Info_API.Get_Credit_Analyst_Code(company, identity) = credit_analyst_);
+          AND Customer_Credit_Info_API.Get_Credit_Analyst_Code(company, identity) = credit_analyst_
+          AND UPPER(Invoice_Party_Type_Group_API.Get_Description(company,'CUSTOMER',Identity_Invoice_Info_API.Get_Group_Id(company,identity,'CUSTOMER'))) NOT LIKE UPPER('%Intercompany%')
+          );
    
 BEGIN
       IF (target_period_ IS NOT NULL) THEN
@@ -2584,7 +2592,110 @@ BEGIN
 RETURN temp_;  
 
 END Check_Escalated_CM;
-  
+
+FUNCTION Get_Team_Period_Target(company_        IN VARCHAR2,
+                                target_period_  IN VARCHAR2) RETURN NUMBER
+IS
+      month_  VARCHAR2(5);
+      year_   VARCHAR2(10);
+      target_ NUMBER:=0;  
+   
+      CURSOR get_target_info(year_ NUMBER) IS
+         SELECT t.*
+           FROM credit_targets_clv t
+          WHERE t.cf$_company = company_
+            AND t.cf$_year =year_;
+   
+   BEGIN
+      IF (target_period_ IS NOT NULL) then
+         SELECT SUBSTR(target_period_, 1, Instr(target_period_, '-') - 1)
+           INTO month_
+           FROM dual;
+      
+         SELECT SUBSTR(target_period_, Instr(target_period_, '-') + 1)
+           INTO year_
+           FROM dual;
+      
+      END IF;
+   
+      FOR rec_ IN get_target_info(to_number(year_)) LOOP
+      
+         IF (month_ = '01') THEN
+            target_ := target_+ rec_.CF$_TARGET_JAN;
+         ELSIF (month_ = '02') THEN
+            target_ := target_+ rec_.CF$_TARGET_FEB;
+         ELSIF (month_ = '03') THEN
+            target_ := target_+ rec_.CF$_TARGET_MARCH;
+         ELSIF (month_ = '04') THEN
+            target_ := target_+ rec_.CF$_TARGET_APRIL;
+         ELSIF (month_ = '05') THEN
+            target_ := target_+ rec_.CF$_TARGET_MAY;
+         ELSIF (month_ = '06') THEN
+            target_ := target_+ rec_.CF$_TARGET_JUNE;
+         ELSIF (month_ = '07') THEN
+            target_ := target_+ rec_.CF$_TARGET_JULLY;
+         ELSIF (month_ = '08') THEN
+            target_ := target_+ rec_.CF$_TARGET_AUG;
+         ELSIF (month_ = '09') THEN
+            target_ := target_+ rec_.CF$_TARGET_SEPT;
+         ELSIF (month_ = '10') THEN
+            target_ := target_+ rec_.CF$_TARGET_OCT;
+         ELSIF (month_ = '11') THEN
+            target_ := target_+ rec_.CF$_TARGET_NOV;
+         ELSIF (month_ = '12') THEN
+            target_ := target_+ rec_.CF$_TARGET_DEC;
+         END IF;
+      
+      END LOOP;
+      IF(target_=0)THEN
+          target_:=NULL;
+      END IF;  
+      RETURN target_;
+END Get_Team_Period_Target;
+   
+FUNCTION Get_Team_Cash_Collected(company_        IN VARCHAR2,
+                                 target_period_  IN VARCHAR2) RETURN NUMBER 
+IS
+                            
+      month_          VARCHAR2(05);
+      year_           VARCHAR2(10);
+      cash_collected_ NUMBER:=0;
+   
+      CURSOR get_cash_collected(in_company_     VARCHAR2,
+                                year_           VARCHAR2,
+                                month_          VARCHAR2) IS
+      SELECT SUM(a.CURR_AMOUNT)
+        FROM payment_per_currency_cu_qry a
+       WHERE company =in_company_
+         AND SERIES_ID = 'CUPAY'
+         AND (TO_CHAR(a.pay_date, 'YYYY') = year_ AND TO_CHAR(a.pay_date, 'MM') = month_)
+  AND EXISTS 
+      (SELECT 1 FROM LEDGER_TRANSACTION_CU_QRY
+        WHERE company = a.company
+          AND series_id = a.SERIES_ID
+          AND payment_id = a.PAYMENT_ID
+          AND LEDGER_COMPANY =a.company
+          AND UPPER(Invoice_Party_Type_Group_API.Get_Description(company,'CUSTOMER',Identity_Invoice_Info_API.Get_Group_Id(company,identity,'CUSTOMER'))) NOT LIKE UPPER('%Intercompany%')
+          );
+   
+BEGIN
+      IF (target_period_ IS NOT NULL) THEN
+         SELECT SUBSTR(target_period_, 1, Instr(target_period_, '-') - 1)
+           INTO month_
+           FROM dual;
+      
+         SELECT SUBSTR(target_period_, Instr(target_period_, '-') + 1)
+           INTO year_
+           FROM dual;
+      END IF;
+   
+      OPEN get_cash_collected(company_, year_, month_);
+      FETCH get_cash_collected
+       INTO cash_collected_;
+      CLOSE get_cash_collected;
+   
+      RETURN NVL(cash_collected_, 0);
+END Get_Team_Cash_Collected;
 --C0368 EntChathI (END)
 
 --C0401 EntPrageG (START)

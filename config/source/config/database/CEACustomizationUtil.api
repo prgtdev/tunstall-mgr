@@ -246,6 +246,14 @@ FUNCTION Check_Escalated_CM(
    company_        IN VARCHAR2,
    credit_manager_ IN VARCHAR2,
    identity_       IN VARCHAR2)  RETURN VARCHAR2;
+
+FUNCTION Get_Team_Period_Target(
+   company_        IN VARCHAR2,
+   target_period_  IN VARCHAR2) RETURN NUMBER;
+
+FUNCTION Get_Team_Cash_Collected(
+   company_        IN VARCHAR2,
+   target_period_  IN VARCHAR2) RETURN NUMBER ;
 --C0368 EntChathI (END) 
 
 --C0401 EntPrageG (START)
