@@ -422,7 +422,7 @@ BEGIN
             INTO seriliazed_;
 
             IF (check_serialized%FOUND) THEN
-
+               
                Create_Serial_Object__(rec_.catalog_no,
                                       order_no_,
                                       rec_.line_no,
@@ -484,6 +484,7 @@ IS
    warr_objkey_           VARCHAR2(3200);
    contract_2_            VARCHAR2(3200) := '2013';
    current_sup_mch_code_  VARCHAR2(3200);
+   attr_2_                VARCHAR2(3200);
    
    --to get lot number and qty 
    CURSOR get_lot_batch_dets(order_no_   IN VARCHAR2,
@@ -576,16 +577,18 @@ BEGIN
          
       ELSE
          current_sup_mch_code_:= Equipment_Functional_API.Get_Sup_Mch_Code(contract_2_, func_obj_);
-         
-         IF func_obj_ != current_sup_mch_code_ THEN
+
+         IF object_id_ != current_sup_mch_code_ THEN
             OPEN get_equipment_object_dets (contract_2_, func_obj_);
             FETCH get_equipment_object_dets INTO objid_, objversion_;
             CLOSE get_equipment_object_dets;
             
+            Client_SYS.Add_To_Attr('SUP_MCH_CODE', object_id_, attr_2_);
+
             Equipment_Functional_API.Modify__(info_,
                                      objid_,
                                      objversion_,
-                                     attr_,
+                                     attr_2_,
                                      'DO');
          END IF;
       END IF;
