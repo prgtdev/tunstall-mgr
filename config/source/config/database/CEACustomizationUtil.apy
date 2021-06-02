@@ -532,28 +532,6 @@ IS
        WHERE contract = contract_
        AND mch_code = mch_code_;
    
-   --check if the part is a subscription part for 2012 
-   CURSOR check_subscription(catalog_ IN VARCHAR2) IS
-      SELECT 1
-        FROM sales_part_cfv
-       WHERE catalog_type_db = 'NON'
-         AND catalog_no = catalog_
-         AND contract = '2012'
-         AND cf$_serviceable_db = 'TRUE';
-   
-   --Check for complementary base part for 2012 
-   CURSOR check_base_part(catalog_ IN VARCHAR2) IS
-      SELECT parent_part_no 
-        FROM suggested_sales_part
-       WHERE suggested_part_no = catalog_
-       AND contract = '2012';
-   
-   --Get Object Created for parent part
-   CURSOR get_parent_object(catalog_ IN VARCHAR2) IS
-      SELECT cf$_object_created
-        FROM customer_order_line_cfv
-       WHERE catalog_no = catalog_;
-    
 BEGIN
    IF (object_id_ is not null) THEN
 
@@ -641,23 +619,6 @@ BEGIN
          END IF;
       END IF;
       
-      -- check if the part is a subscription part
-      OPEN check_subscription(catalog_no_);
-      FETCH check_subscription INTO temps_3_;
-      IF(temps_3_ = 1) THEN 
-         -- Need to connect Functional Subscription Object to Parent Serial Object
-         OPEN check_base_part(catalog_no_);
-         FETCH check_base_part INTO parent_part_no_;
-         CLOSE check_base_part;
-         
-         OPEN get_parent_object(parent_part_no_);
-         FETCH get_parent_object INTO parent_object_;
-         CLOSE get_parent_object;
-         
-         --Client_SYS.Add_To_Attr();
-         --EQUIPMENT_OBJECT_CONN_API.NEW__( :p0 , :p1 , :p2 , :p3 , :p4 );
-      END IF;
-      CLOSE check_subscription;
    END IF;
 END Create_Functional_Object_;
   
