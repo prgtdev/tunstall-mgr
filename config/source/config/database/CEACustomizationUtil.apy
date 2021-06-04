@@ -388,12 +388,12 @@ IS
         FROM customer_order_line_cfv a
        WHERE order_no = order_no_
          AND state IN ('Delivered', 'Invoiced/Closed');
-
+    
    CURSOR check_sales_part(catalog_ IN VARCHAR2) IS
       SELECT 1
         FROM sales_part_cfv
        WHERE catalog_no = catalog_
-         AND contract = '2013'
+         AND contract = '2012'
          AND CF$_SERVICEABLE_DB = 'TRUE';
 
    --Check serialised
@@ -415,7 +415,7 @@ BEGIN
                            length(rec_.CF$_OBJECT_ID));
 
       IF (object_id_ is not null) THEN
-         --Create objects only if site 2013 and serviceable
+         --Create objects only if site 2012 and serviceable
          IF (temps_ = 1) THEN
             OPEN check_serialized(rec_.catalog_no);
             FETCH check_serialized
@@ -485,6 +485,10 @@ IS
    contract_2_            VARCHAR2(3200) := '2013';
    current_sup_mch_code_  VARCHAR2(3200);
    attr_2_                VARCHAR2(3200);
+   attr_cf_               VARCHAR2(3200);
+   temps_3_               NUMBER;
+   parent_part_no_        VARCHAR2(3200);
+   parent_object_         VARCHAR2(3200);
    
    --to get lot number and qty 
    CURSOR get_lot_batch_dets(order_no_   IN VARCHAR2,
@@ -500,7 +504,8 @@ IS
          AND order_ref3 = rel_no_
          AND contract = contract_
          AND part_no = catalog_no_
-         AND order_type_db = 'CUST ORDER';
+         AND order_type_db = 'CUST ORDER'
+         AND transaction_desc LIKE 'Delivered on customer order %';
   
    --get warranty type 
    CURSOR get_warranty_type(warranty_id_ IN VARCHAR2) IS
@@ -525,7 +530,8 @@ IS
       SELECT objid, objversion
         FROM equipment_object
        WHERE contract = contract_
-         AND mch_code = mch_code_;
+       AND mch_code = mch_code_;
+   
 BEGIN
    IF (object_id_ is not null) THEN
 
@@ -534,11 +540,11 @@ BEGIN
                               line_no_,
                               rel_no_,
                               catalog_no_,
-                              contract_2_);
+                              contract_);
       FETCH get_lot_batch_dets
        INTO lot_no_;
       CLOSE get_lot_batch_dets;
-
+      
       OPEN get_warranty_type(warranty_id_);
       FETCH get_warranty_type
        INTO type_;
@@ -589,6 +595,9 @@ BEGIN
          Client_SYS.Add_To_Attr('CF$_SERVICE_WARRANTY', warr_objkey_, attr_);
          Equipment_Functional_CFP.Cf_Modify__(info_, objid_, attr_, ' ', 'DO');
          
+         Client_SYS.Add_To_Attr('CF$_OBJECT_CREATED', func_obj_, attr_cf_);
+         Customer_Order_Line_CFP.Cf_Modify__(info_, col_objid_, attr_cf_, ' ', 'DO');
+         
       ELSE
          current_sup_mch_code_:= Equipment_Functional_API.Get_Sup_Mch_Code(contract_2_, func_obj_);
 
@@ -609,7 +618,7 @@ BEGIN
             ERROR_SYS.RECORD_GENERAL('CUSTOMERORDERLINE', 'OBJCREATED: No new Functional Objects Created, Functional Objects are already created for Object ID :P1', object_id_);
          END IF;
       END IF;
-
+      
    END IF;
 END Create_Functional_Object_;
   
@@ -639,7 +648,8 @@ IS
    contract_    VARCHAR2(50) := '2013';
    warr_objkey_ VARCHAR2(3200);
    values_      VARCHAR2(10);
-  
+   attr_cf_     VARCHAR2(3200);
+   
    --To get serial objects qty per CO line
    CURSOR get_serial_objects_col(catalog_   IN VARCHAR2,
                                   order_no_ IN VARCHAR2,
@@ -736,13 +746,16 @@ BEGIN
                                                   mch_code_,
                                                   catalog_no_,
                                                   obj.serial_no);
-
+         
          Equipment_Object_API.Move_From_Invent_To_Facility(contract_,
                                                           object_id_,
                                                           catalog_no_,
                                                           obj.serial_no,
                                                           mch_code_);
-
+         
+         Client_SYS.Add_To_Attr('CF$_OBJECT_CREATED', mch_code_, attr_cf_);
+         Customer_Order_Line_CFP.Cf_Modify__(info_, col_objid_, attr_cf_, ' ', 'DO');
+         
          OPEN modify_serial_obj_date(mch_code_, obj.serial_no);
          FETCH modify_serial_obj_date
           INTO objid_, objversion_;
@@ -2979,7 +2992,37 @@ BEGIN
 END Get_Pack_Qty;   
 -- C0641 EA Maheshi (END)
 
+-- C0449 EntChamuA (START)
+FUNCTION Get_Contract_Id(
+   mch_code_ VARCHAR2,
+   contract_ VARCHAR2) RETURN VARCHAR2
+IS
+   return_value_ VARCHAR2(100);
+   
+   CURSOR get_contract_id (mch_code_ IN VARCHAR2, contract_ IN VARCHAR2) IS
+      SELECT DISTINCT cp.contract_id
+      FROM psc_contr_product_uiv cp
+      WHERE connection_type_db IN ('EQUIPMENT', 'CATEGORY', 'PART')
+      AND (EXISTS (SELECT 1
+         FROM psc_srv_line_objects t
+         WHERE t.contract_id = cp.contract_id
+         AND t.line_no = cp.line_no
+         AND (t.mch_code, t.mch_contract) IN
+         (SELECT mch_code, contract
+            FROM Equipment_All_Object_Uiv
+            START WITH mch_code = mch_code_
+            AND contract = contract_
+            CONNECT BY PRIOR mch_code = sup_mch_code
+            AND PRIOR contract = sup_contract)));
 
+BEGIN
+   
+   OPEN get_contract_id(mch_code_, contract_);
+   FETCH get_contract_id INTO return_value_;
+   CLOSE get_contract_id;
+   RETURN return_value_;
+END Get_Contract_Id;
+--  C0049 EntChamuA (END)
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------
 -----------------------------------------------------------------------------
