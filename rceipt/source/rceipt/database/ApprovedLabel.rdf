@@ -80,7 +80,8 @@ BEGIN
    Database_SYS.Set_Table_Column(columns_, 'RECEIVER', 'VARCHAR2(30)', 'Y');
    Database_SYS.Set_Table_Column(columns_, 'OWNERSHIP', 'VARCHAR2(200)', 'Y');
    Database_SYS.Set_Table_Column(columns_, 'EXPIRATION_DATE', 'DATE', 'Y');
-   Database_SYS.Set_Table_Column(columns_, 'APPROVED_DATE', 'DATE', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'RECEIPT_DATE', 'DATE', 'Y');
+   Database_SYS.Set_Table_Column(columns_, 'DEFAULT_LOCATION_NO', 'VARCHAR2(10)', 'Y');
    Database_SYS.Create_Or_Replace_Table(table_name_, columns_, '&IFSAPP_REPORT_DATA', NULL, TRUE);
 END;
 /
@@ -103,7 +104,7 @@ PROMPT Creating report view APPROVED_LABEL_REP
 
 CREATE OR REPLACE VIEW APPROVED_LABEL_REP AS
 SELECT RESULT_KEY, ROW_NO, PARENT_ROW_NO, ROWVERSION
-   ,RECEIPT_SEQUENCE,CONTRACT,PART_NO,CONFIGURATION_ID,LOCATION_NO,LOT_BATCH_NO,SERIAL_NO,E_C,W_D_R_NO,ACTIVITY_SEQ,HANDLING_UNIT_ID,ORIGIN_PACK_SIZE,NO_OF_COPIES,PACK_QTY,BATCH_NO,RECEIVER,OWNERSHIP,EXPIRATION_DATE,APPROVED_DATE
+   ,RECEIPT_SEQUENCE,CONTRACT,PART_NO,CONFIGURATION_ID,LOCATION_NO,LOT_BATCH_NO,SERIAL_NO,E_C,W_D_R_NO,ACTIVITY_SEQ,HANDLING_UNIT_ID,ORIGIN_PACK_SIZE,NO_OF_COPIES,PACK_QTY,BATCH_NO,RECEIVER,OWNERSHIP,EXPIRATION_DATE,RECEIPT_DATE,DEFAULT_LOCATION_NO
 FROM   APPROVED_LABEL_RPT t
 WHERE EXISTS (SELECT 1 FROM allowed_report a WHERE a.result_key = t.result_key)
 WITH   read only;
@@ -151,8 +152,10 @@ COMMENT ON COLUMN APPROVED_LABEL_REP.ownership
    IS 'FLAGS=A----^DATATYPE=STRING(200)^TITLE=Ownership^';
 COMMENT ON COLUMN APPROVED_LABEL_REP.expiration_date
    IS 'FLAGS=A----^DATATYPE=DATE/DATE^TITLE=Expiration Date^';
-COMMENT ON COLUMN APPROVED_LABEL_REP.approved_date
-   IS 'FLAGS=A----^DATATYPE=DATE/DATE^TITLE=Approved Date^';
+COMMENT ON COLUMN APPROVED_LABEL_REP.receipt_date
+   IS 'FLAGS=A----^DATATYPE=DATE/DATE^TITLE=Receipt Date^';
+COMMENT ON COLUMN APPROVED_LABEL_REP.default_location_no
+   IS 'FLAGS=A----^DATATYPE=STRING(10)^TITLE=Default Location No^';
 
 -----------------------------------------------------------------------------
 -------------------- REPORT REGISTRATION ------------------------------------
@@ -199,7 +202,8 @@ CREATE OR REPLACE PACKAGE BODY APPROVED_LABEL_RPI IS
          NULL ownership,
          NULL serial_no,
          NULL expiration_date,
-         NULL approved_date
+         NULL receipt_date,
+         NULL default_location_no
       from dual;
 
 -----------------------------------------------------------------------------
@@ -234,7 +238,8 @@ BEGIN
       receiver,
       ownership,
       expiration_date,
-      approved_date,
+      receipt_date,
+      default_location_no,
       row_no, parent_row_no)
    VALUES (
       result_key$_,
@@ -259,7 +264,8 @@ BEGIN
       rec_detail_.receiver,
       rec_detail_.ownership,
       rec_detail_.expiration_date,
-      rec_detail_.approved_date,
+      rec_detail_.receipt_date,
+      rec_detail_.default_location_no,
       row_no$_, 0);
    row_no$_ := row_no$_+1;
 END Add_Result_Row___;
@@ -267,32 +273,40 @@ END Add_Result_Row___;
 -----------------------------------------------------------------------------
 -------------------- REPORT EXECUTION ---------------------------------------
 -----------------------------------------------------------------------------
-FUNCTION Get_Label_Count___(
-   qty_to_pack_   IN NUMBER,
-   pack_size_     IN NUMBER ) RETURN NUMBER
+
+PROCEDURE Get_Label_Qty_And_Pack_Size___(
+   no_of_labels_   OUT NUMBER,
+   last_pack_size_ OUT NUMBER,
+   qty_to_pack_    IN NUMBER,
+   pack_size_      IN NUMBER ) 
 IS
    CURSOR get_remaining IS
       SELECT MOD(qty_to_pack_, pack_size_) FROM dual;
    remaining_count_  NUMBER;
 BEGIN
    IF (qty_to_pack_ <= 0) THEN
-      RETURN 0;
+      no_of_labels_ := 0;
    ELSIF (pack_size_ <= 0) THEN   
-      RETURN 0; 
+      no_of_labels_ := 0; 
    ELSIF (qty_to_pack_/pack_size_ < 1) THEN  
-      RETURN 1; 
+      no_of_labels_ := 1; 
+      last_pack_size_ := 0;
    END IF;
    OPEN  get_remaining;
    FETCH get_remaining INTO remaining_count_;
    CLOSE get_remaining;   
    IF (remaining_count_ = 0) THEN    
-      RETURN qty_to_pack_/pack_size_;
+      no_of_labels_ := qty_to_pack_/pack_size_;
+      last_pack_size_ := 0;
    ELSIF (remaining_count_/pack_size_ >= 0.5) THEN
-      RETURN ROUND((qty_to_pack_/pack_size_), 0);
+      no_of_labels_ := ROUND((qty_to_pack_/pack_size_), 0);
+      last_pack_size_ := remaining_count_;
    ELSE
-      RETURN ROUND((qty_to_pack_/pack_size_), 0) + 1;
+      no_of_labels_ := ROUND((qty_to_pack_/pack_size_), 0) + 1;
+      last_pack_size_ := remaining_count_;
    END IF;  
-END Get_Label_Count___;
+END Get_Label_Qty_And_Pack_Size___;
+
 
 PROCEDURE Execute_Report (
    report_attr_    IN VARCHAR2,
@@ -314,13 +328,18 @@ IS
    source_ref2_              receipt_info.source_ref2%TYPE;
    source_ref3_              receipt_info.source_ref3%TYPE;
    source_ref4_              receipt_info.source_ref4%TYPE;
-   source_ref_type_          receipt_info.source_ref_type_db%TYPE;   
+   source_ref_type_          receipt_info.source_ref_type_db%TYPE;  
+   default_location_no_      inventory_part_def_loc.location_no%TYPE;
    receipt_info_rec_         Receipt_Info_API.Public_Rec;
    no_of_labels_             NUMBER; 
+   last_pack_size_           NUMBER;
    inv_qty_in_store_         NUMBER;       
    expiration_date_          DATE;
+   stmt_                     VARCHAR2(2000);
+   TYPE Get_Default_Location IS REF CURSOR;
+   get_default_location_     Get_Default_Location; 
 BEGIN
-   General_SYS.Init_Method(lu_name_, 'APPROVED_LABEL_RPI', 'Execute_Report');
+   General_SYS.Init_Method(lu_name_, 'APPROVED_LABEL_RPI', 'Execute_Report');   
    result_key$_                 := Client_SYS.Attr_Value_To_Number(Client_SYS.Get_Item_Value('RESULT_KEY', report_attr_));
    binds$_.receipt_sequence     := Client_SYS.Attr_Value_To_Number(Client_SYS.Get_Item_Value('RECEIPT_SEQUENCE', parameter_attr_));
    binds$_.contract             := Client_SYS.Get_Item_Value('CONTRACT', parameter_attr_); 
@@ -335,7 +354,7 @@ BEGIN
    binds$_.handling_unit_id     := Client_SYS.Attr_Value_To_Number(Client_SYS.Get_Item_Value('HANDLING_UNIT_ID', parameter_attr_));
    binds$_.origin_pack_size     := Client_SYS.Attr_Value_To_Number(Client_SYS.Get_Item_Value('ORIGIN_PACK_SIZE', parameter_attr_));
    binds$_.no_of_copies         := Client_SYS.Attr_Value_To_Number(Client_SYS.Get_Item_Value('NO_OF_COPIES', parameter_attr_));
-
+   
    Xml_Record_Writer_SYS.Create_Report_Header(xml$_, 'APPROVED_LABEL_REP', 'Approved Label');
 
    Xml_Record_Writer_SYS.Start_Element(xml$_, 'ITEMS');
@@ -358,11 +377,11 @@ BEGIN
                                                                       binds$_.w_d_r_no,
                                                                       binds$_.activity_seq,
                                                                       binds$_.handling_unit_id);
-
-   no_of_labels_ := Get_Label_Count___(inv_qty_in_store_, binds$_.origin_pack_size);
    
-   FOR label_count_ IN 1 .. no_of_labels_ LOOP
-      bar_code_id_ := NULL;
+   Get_Label_Qty_And_Pack_Size___(no_of_labels_, last_pack_size_, inv_qty_in_store_, binds$_.origin_pack_size);
+   
+   FOR label_count_ IN 1 .. no_of_labels_ LOOP      
+      bar_code_id_ := NULL;      
       Inventory_Part_Barcode_API.New(bar_code_id_, 
                                      binds$_.contract, 
                                      binds$_.part_no, 
@@ -373,17 +392,21 @@ BEGIN
                                      binds$_.w_d_r_no, 
                                      binds$_.origin_pack_size, 
                                      binds$_.activity_seq);
-      
+     
       FOR copy_count_ IN 1 .. binds$_.no_of_copies LOOP  
          Xml_Record_Writer_SYS.Start_Element(xml$_, 'DETAIL');
-         Xml_Record_Writer_SYS.Add_Element(xml$_, 'PART_NO', binds$_.part_no);    
-         Xml_Record_Writer_SYS.Add_Element(xml$_, 'PACK_QTY', binds$_.origin_pack_size);
+         Xml_Record_Writer_SYS.Add_Element(xml$_, 'PART_NO', binds$_.part_no); 
+         IF ((label_count_ < no_of_labels_) OR ((label_count_ = no_of_labels_) AND (last_pack_size_ = 0))) THEN   
+             Xml_Record_Writer_SYS.Add_Element(xml$_, 'PACK_QTY', binds$_.origin_pack_size);
+         ELSE
+             Xml_Record_Writer_SYS.Add_Element(xml$_, 'PACK_QTY', last_pack_size_);
+         END IF;           
          Xml_Record_Writer_SYS.Add_Element(xml$_, 'LOCATION_NO',  binds$_.location_no);
          Xml_Record_Writer_SYS.Add_Element(xml$_, 'BATCH_NO', binds$_.lot_batch_no);
-         Xml_Record_Writer_SYS.Add_Element(xml$_, 'RECEIVER', Receipt_Info_API.Get_Receiver(binds$_.receipt_sequence));
+         Xml_Record_Writer_SYS.Add_Element(xml$_, 'RECEIVER', Fnd_Session_API.Get_Fnd_User);
          part_ownership_ := Part_Ownership_API.Decode(Receipt_Info_Manager_API.Get_Part_Ownership_Db(source_ref1_, source_ref2_, source_ref3_, source_ref4_, source_ref_type_));
          Xml_Record_Writer_SYS.Add_Element(xml$_, 'OWNERSHIP', part_ownership_);      
-         Xml_Record_Writer_SYS.Add_Element(xml$_, 'SERIAL_NO', binds$_.serial_no);
+         Xml_Record_Writer_SYS.Add_Element(xml$_, 'SERIAL_NO', binds$_.serial_no);         
          expiration_date_ := Inventory_Part_In_Stock_API.Get_Expiration_Date(binds$_.contract, 
                                                                              binds$_.part_no, 
                                                                              binds$_.configuration_id, 
@@ -395,7 +418,30 @@ BEGIN
                                                                              binds$_.activity_seq,
                                                                              binds$_.handling_unit_id);
          Xml_Record_Writer_SYS.Add_Element(xml$_, 'EXPIRATION_DATE', expiration_date_);
-         Xml_Record_Writer_SYS.Add_Element(xml$_, 'APPROVED_DATE', Receipt_Info_API.Get_Approved_Date(binds$_.receipt_sequence));
+         Xml_Record_Writer_SYS.Add_Element(xml$_, 'RECEIPT_DATE', Receipt_Info_API.Get_Arrival_Date(binds$_.receipt_sequence));
+         
+         stmt_ := 'SELECT cf$_default_location '||
+                  'FROM receipt_inv_location_cfv '||
+                  'WHERE receipt_sequence = :receipt_sequence '||
+                  'AND contract = :contract '||
+                  'AND part_no = :part_no '||
+                  'AND configuration_id = :configuration_id '||
+                  'AND location_no = :location_no '||
+                  'AND lot_batch_no = :lot_batch_no '||
+                  'AND serial_no = :serial_no '||
+                  'AND eng_chg_level = :eng_chg_level '||
+                  'AND waiv_dev_rej_no = :waiv_dev_rej_no '||
+                  'AND activity_seq = :activity_seq '||
+                  'AND handling_unit_id = :handling_unit_id ';  
+                  
+         --@ApproveDynamicStatement('2021-06-02',eamaheshi);
+         OPEN get_default_location_ FOR stmt_ USING binds$_.receipt_sequence, binds$_.contract, binds$_.part_no, binds$_.configuration_id, binds$_.location_no, binds$_.lot_batch_no, binds$_.serial_no, binds$_.e_c, binds$_.w_d_r_no , binds$_.activity_seq, binds$_.handling_unit_id;
+         LOOP 
+            FETCH get_default_location_ INTO default_location_no_;
+            EXIT WHEN get_default_location_%NOTFOUND;
+         END LOOP;
+         CLOSE get_default_location_;                    
+         Xml_Record_Writer_SYS.Add_Element(xml$_, 'DEFAULT_LOCATION_NO', default_location_no_);
          Xml_Record_Writer_SYS.End_Element(xml$_, 'DETAIL');
          Add_Result_Row___(result_key$_,
                            binds$_ => binds$_,
