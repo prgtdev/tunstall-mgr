@@ -290,6 +290,18 @@ FUNCTION Get_Contract_Id(
    mch_code_ VARCHAR2,
    contract_ VARCHAR2) RETURN VARCHAR2;
 -- C0449 EntChamuA (END)
+
+--240521 ISURUG Calculate Shift Admin Time (START)
+FUNCTION Calculate_Shift_Admin_Time (emp_name_ IN VARCHAR2) RETURN NUMBER;
+--240521 ISURUG Calculate Shift Admin Time (END)
+
+--240521 ISURUG Calculate Idle Time (START)
+FUNCTION Calculate_Idle_Time (
+   emp_name_ IN VARCHAR2, 
+   sdate_    IN VARCHAR2, 
+   edate_    IN VARCHAR2) RETURN NUMBER;
+--240521 ISURUG Calculate Idle Time (END)
+
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------
 -----------------------------------------------------------------------------
