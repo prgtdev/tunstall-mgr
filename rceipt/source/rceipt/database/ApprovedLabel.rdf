@@ -153,23 +153,23 @@ COMMENT ON COLUMN APPROVED_LABEL_REP.activity_seq
 COMMENT ON COLUMN APPROVED_LABEL_REP.handling_unit_id
    IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=Handling Unit Id^QUERY=Handling Unit Id:^QFLAGS=OW---^';
 COMMENT ON COLUMN APPROVED_LABEL_REP.origin_pack_size1
-   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=Origin Pack Size 1^QUERY=Origin Pack Size1:^QFLAGS=OW---^';
+   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=Origin Pack Size 1^QUERY=Origin Pack Size 1:^QFLAGS=OW---^';
 COMMENT ON COLUMN APPROVED_LABEL_REP.no_of_labels1
-   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=No Of Labels 1^QUERY=No Of Labels1:^QFLAGS=OW---^';
+   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=No Of Labels 1^QUERY=No Of Labels 1:^QFLAGS=OW---^';
 COMMENT ON COLUMN APPROVED_LABEL_REP.no_of_copies1
-   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=No Of Copies 1^QUERY=No Of Copies1:^QFLAGS=OW---^';
+   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=No Of Copies 1^QUERY=No Of Copies 1:^QFLAGS=OW---^';
 COMMENT ON COLUMN APPROVED_LABEL_REP.origin_pack_size2
-   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=Origin Pack Size 2^QUERY=Origin Pack Size2:^QFLAGS=OW---^';
+   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=Origin Pack Size 2^QUERY=Origin Pack Size 2:^QFLAGS=OW---^';
 COMMENT ON COLUMN APPROVED_LABEL_REP.no_of_labels2
-   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=No Of Labels 2^QUERY=No Of Labels2:^QFLAGS=OW---^';
+   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=No Of Labels 2^QUERY=No Of Labels 2:^QFLAGS=OW---^';
 COMMENT ON COLUMN APPROVED_LABEL_REP.no_of_copies2
-   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=No Of Copies 2^QUERY=No Of Copies2:^QFLAGS=OW---^';
+   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=No Of Copies 2^QUERY=No Of Copies 2:^QFLAGS=OW---^';
 COMMENT ON COLUMN APPROVED_LABEL_REP.origin_pack_size3
-   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=Origin Pack Size 3^QUERY=Origin Pack Size3:^QFLAGS=OW---^';
+   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=Origin Pack Size 3^QUERY=Origin Pack Size 3:^QFLAGS=OW---^';
 COMMENT ON COLUMN APPROVED_LABEL_REP.no_of_labels3
-   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=No Of Labels 3^QUERY=No Of Labels3:^QFLAGS=OW---^';
+   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=No Of Labels 3^QUERY=No Of Labels 3:^QFLAGS=OW---^';
 COMMENT ON COLUMN APPROVED_LABEL_REP.no_of_copies3
-   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=No Of Copies 3^QUERY=No Of Copies3:^QFLAGS=OW---^';
+   IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=No Of Copies 3^QUERY=No Of Copies 3:^QFLAGS=OW---^';
 COMMENT ON COLUMN APPROVED_LABEL_REP.pack_qty
    IS 'FLAGS=A----^DATATYPE=NUMBER^TITLE=Pack Qty^';
 COMMENT ON COLUMN APPROVED_LABEL_REP.batch_no
@@ -387,7 +387,7 @@ BEGIN
                                                                       binds$_.handling_unit_id);
    
    IF (binds$_.origin_pack_size1 IS NULL AND binds$_.no_of_labels1 IS NULL AND binds$_.origin_pack_size2 IS NULL AND binds$_.no_of_labels2 IS NULL AND binds$_.origin_pack_size3 IS NULL AND binds$_.no_of_labels3 IS NULL) THEN
-      Error_SYS.Appl_General(lu_name_, 'EMPTYQTYVALUES: Please define values for pack quanties/no of labels to proceed.');
+      Error_SYS.Appl_General(lu_name_, 'EMPTYQTYVALUES: Please define values for pack quantities/no of labels to proceed.');
    END IF;   
     
    IF ((binds$_.origin_pack_size1 IS NOT NULL AND binds$_.no_of_labels1 IS NULL) OR (binds$_.origin_pack_size1 IS NULL AND binds$_.no_of_labels1 IS NOT NULL)) THEN
@@ -395,7 +395,7 @@ BEGIN
    END IF;
    
    IF (binds$_.origin_pack_size1 IS NOT NULL AND binds$_.no_of_labels1 IS NOT NULL AND  binds$_.no_of_copies1 IS NULL) THEN
-      Error_SYS.Appl_General(lu_name_, 'INCORRECTNOOFCIPES1: Please define a value for No Of Labels 1.');   
+      Error_SYS.Appl_General(lu_name_, 'INCORRECTNOOFCOPIES1: Please define a value for No Of Labels 1.');   
    END IF;
    
    IF ((binds$_.origin_pack_size2 IS NOT NULL AND binds$_.no_of_labels2 IS NULL) OR (binds$_.origin_pack_size2 IS NULL AND binds$_.no_of_labels2 IS NOT NULL)) THEN
@@ -403,7 +403,7 @@ BEGIN
    END IF;
    
    IF (binds$_.origin_pack_size2 IS NOT NULL AND binds$_.no_of_labels2 IS NOT NULL AND  binds$_.no_of_copies2 IS NULL) THEN
-      Error_SYS.Appl_General(lu_name_, 'INCORRECTNOOFCIPES2: Please define a value for No Of Labels 2.');   
+      Error_SYS.Appl_General(lu_name_, 'INCORRECTNOOFCOPIES2: Please define a value for No Of Labels 2.');   
    END IF;
    
    IF ((binds$_.origin_pack_size3 IS NOT NULL AND binds$_.no_of_labels3 IS NULL) OR (binds$_.origin_pack_size3 IS NULL AND binds$_.no_of_labels3 IS NOT NULL)) THEN
@@ -411,11 +411,11 @@ BEGIN
    END IF;
    
     IF (binds$_.origin_pack_size3 IS NOT NULL AND binds$_.no_of_labels3 IS NOT NULL AND  binds$_.no_of_copies3 IS NULL) THEN
-      Error_SYS.Appl_General(lu_name_, 'INCORRECTNOOFCIPES2: Please define a value for No Of Labels 3.');   
+      Error_SYS.Appl_General(lu_name_, 'INCORRECTNOOFCOPIES3: Please define a value for No Of Labels 3.');   
    END IF;
    
    IF (((NVL(binds$_.origin_pack_size1, 0) * NVL(binds$_.no_of_labels1, 0)) + (NVL(binds$_.origin_pack_size2, 0) * NVL(binds$_.no_of_labels2,0)) + (NVL(binds$_.origin_pack_size3,0) * NVL(binds$_.no_of_labels3,0))) != inv_qty_in_store_) THEN
-      Error_SYS.Appl_General(lu_name_, 'INCORRECTQTY: The total quantity for labels does not match with the real quantity in the receipt line.');   
+      Error_SYS.Appl_General(lu_name_, 'INCORRECTTOTALQTY: The total quantity for labels does not match with the real quantity in the receipt line.');   
    END IF; 
    
    Xml_Record_Writer_SYS.Create_Report_Header(xml$_, 'APPROVED_LABEL_REP', 'Approved Label');
