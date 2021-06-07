@@ -2976,22 +2976,6 @@ BEGIN
 END Check_Kanban_Reservation_Date; 
 -- C0654 EntChamuA (END)
 
--- C0641 EA Maheshi (START)
-FUNCTION Get_Pack_Qty ( 
-   receipt_sequence_ NUMBER) RETURN NUMBER
-IS
-   receipt_info_rec_  Receipt_Info_API.Public_Rec;
-BEGIN
-   receipt_info_rec_  := Receipt_Info_API.Get(receipt_sequence_);
-   IF (receipt_info_rec_.sender_type = Sender_Receiver_Type_API.DB_SUPPLIER) THEN
-      RETURN Purchase_Part_Supplier_API.Get_Standard_Pack_Size(receipt_info_rec_.contract,
-                                                               receipt_info_rec_.source_part_no,
-                                                               receipt_info_rec_.sender);
-   END IF; 
-   RETURN NULL;   
-END Get_Pack_Qty;   
--- C0641 EA Maheshi (END)
-
 -- C0449 EntChamuA (START)
 FUNCTION Get_Contract_Id(
    mch_code_ VARCHAR2,
