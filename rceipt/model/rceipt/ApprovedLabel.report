@@ -33,7 +33,7 @@
                <SIZE>
                   <POINT>
                      <X>151</X>
-                     <Y>285</Y>
+                     <Y>418</Y>
                   </POINT>
                </SIZE>
             </DIAGRAM_NODE>
@@ -50,14 +50,14 @@
                </PROPERTIES>
                <LOCATION>
                   <POINT>
-                     <X>239</X>
-                     <Y>322</Y>
+                     <X>526</X>
+                     <Y>333</Y>
                   </POINT>
                </LOCATION>
                <SIZE>
                   <POINT>
-                     <X>130</X>
-                     <Y>209</Y>
+                     <X>158</X>
+                     <Y>228</Y>
                   </POINT>
                </SIZE>
             </DIAGRAM_NODE>
@@ -84,12 +84,12 @@
                </PROPERTIES>
                <CONTROL_POINTS>
                   <POINT>
-                     <X>302</X>
-                     <Y>298</Y>
+                     <X>379</X>
+                     <Y>278</Y>
                   </POINT>
                   <POINT>
-                     <X>302</X>
-                     <Y>321</Y>
+                     <X>525</X>
+                     <Y>387</Y>
                   </POINT>
                </CONTROL_POINTS>
             </DIAGRAM_EDGE>
@@ -111,7 +111,8 @@
    NULL ownership,
    NULL serial_no,
    NULL expiration_date,
-   NULL receipt_date
+   NULL receipt_date,
+   NULL default_location_no
 from dual</CURSOR_DEFINITION>
          <ATTRIBUTES>
             <ATTRIBUTE>
@@ -275,7 +276,12 @@ from dual</CURSOR_DEFINITION>
          <ALLOW_WILDCARDS>0</ALLOW_WILDCARDS>
       </PARAMETER>
       <PARAMETER>
-         <NAME>OriginPackSize</NAME>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <LABEL_TEXT>Origin Pack Size 1</LABEL_TEXT>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>OriginPackSize1</NAME>
          <PARAMETER_DATATYPE>NUMBER</PARAMETER_DATATYPE>
          <IS_MANDATORY>0</IS_MANDATORY>
          <IS_CUSTOM>0</IS_CUSTOM>
@@ -284,7 +290,110 @@ from dual</CURSOR_DEFINITION>
          <ALLOW_WILDCARDS>0</ALLOW_WILDCARDS>
       </PARAMETER>
       <PARAMETER>
-         <NAME>NoOfCopies</NAME>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <LABEL_TEXT>No Of Labels 1</LABEL_TEXT>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>NoOfLabels1</NAME>
+         <PARAMETER_DATATYPE>NUMBER</PARAMETER_DATATYPE>
+         <IS_MANDATORY>0</IS_MANDATORY>
+         <IS_CUSTOM>0</IS_CUSTOM>
+         <IS_SINGLE>0</IS_SINGLE>
+         <ALLOW_BETWEEN>0</ALLOW_BETWEEN>
+         <ALLOW_WILDCARDS>0</ALLOW_WILDCARDS>
+      </PARAMETER>
+      <PARAMETER>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <LABEL_TEXT>No Of Copies 1</LABEL_TEXT>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>NoOfCopies1</NAME>
+         <PARAMETER_DATATYPE>NUMBER</PARAMETER_DATATYPE>
+         <IS_MANDATORY>0</IS_MANDATORY>
+         <IS_CUSTOM>0</IS_CUSTOM>
+         <IS_SINGLE>0</IS_SINGLE>
+         <ALLOW_BETWEEN>0</ALLOW_BETWEEN>
+         <ALLOW_WILDCARDS>0</ALLOW_WILDCARDS>
+      </PARAMETER>
+      <PARAMETER>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <LABEL_TEXT>Origin Pack Size 2</LABEL_TEXT>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>OriginPackSize2</NAME>
+         <PARAMETER_DATATYPE>NUMBER</PARAMETER_DATATYPE>
+         <IS_MANDATORY>0</IS_MANDATORY>
+         <IS_CUSTOM>0</IS_CUSTOM>
+         <IS_SINGLE>0</IS_SINGLE>
+         <ALLOW_BETWEEN>0</ALLOW_BETWEEN>
+         <ALLOW_WILDCARDS>0</ALLOW_WILDCARDS>
+      </PARAMETER>
+      <PARAMETER>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <LABEL_TEXT>No Of Labels 2</LABEL_TEXT>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>NoOfLabels2</NAME>
+         <PARAMETER_DATATYPE>NUMBER</PARAMETER_DATATYPE>
+         <IS_MANDATORY>0</IS_MANDATORY>
+         <IS_CUSTOM>0</IS_CUSTOM>
+         <IS_SINGLE>0</IS_SINGLE>
+         <ALLOW_BETWEEN>0</ALLOW_BETWEEN>
+         <ALLOW_WILDCARDS>0</ALLOW_WILDCARDS>
+      </PARAMETER>
+      <PARAMETER>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <LABEL_TEXT>No Of Copies 2</LABEL_TEXT>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>NoOfCopies2</NAME>
+         <PARAMETER_DATATYPE>NUMBER</PARAMETER_DATATYPE>
+         <IS_MANDATORY>0</IS_MANDATORY>
+         <IS_CUSTOM>0</IS_CUSTOM>
+         <IS_SINGLE>0</IS_SINGLE>
+         <ALLOW_BETWEEN>0</ALLOW_BETWEEN>
+         <ALLOW_WILDCARDS>0</ALLOW_WILDCARDS>
+      </PARAMETER>
+      <PARAMETER>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <LABEL_TEXT>Origin Pack Size 3</LABEL_TEXT>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>OriginPackSize3</NAME>
+         <PARAMETER_DATATYPE>NUMBER</PARAMETER_DATATYPE>
+         <IS_MANDATORY>0</IS_MANDATORY>
+         <IS_CUSTOM>0</IS_CUSTOM>
+         <IS_SINGLE>0</IS_SINGLE>
+         <ALLOW_BETWEEN>0</ALLOW_BETWEEN>
+         <ALLOW_WILDCARDS>0</ALLOW_WILDCARDS>
+      </PARAMETER>
+      <PARAMETER>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <LABEL_TEXT>No Of Labels 3</LABEL_TEXT>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>NoOfLabels3</NAME>
+         <PARAMETER_DATATYPE>NUMBER</PARAMETER_DATATYPE>
+         <IS_MANDATORY>0</IS_MANDATORY>
+         <IS_CUSTOM>0</IS_CUSTOM>
+         <IS_SINGLE>0</IS_SINGLE>
+         <ALLOW_BETWEEN>0</ALLOW_BETWEEN>
+         <ALLOW_WILDCARDS>0</ALLOW_WILDCARDS>
+      </PARAMETER>
+      <PARAMETER>
+         <CODE_GENERATION_PROPERTIES>
+            <CODE_GENERATION_PROPERTIES>
+               <LABEL_TEXT>No Of Copies 3</LABEL_TEXT>
+            </CODE_GENERATION_PROPERTIES>
+         </CODE_GENERATION_PROPERTIES>
+         <NAME>NoOfCopies3</NAME>
          <PARAMETER_DATATYPE>NUMBER</PARAMETER_DATATYPE>
          <IS_MANDATORY>0</IS_MANDATORY>
          <IS_CUSTOM>0</IS_CUSTOM>

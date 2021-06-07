@@ -556,7 +556,7 @@
                            </xs:all>
                         </xs:complexType>
                      </xs:element>
-                     <xs:element name="ORIGIN_PACK_SIZE">
+                     <xs:element name="ORIGIN_PACK_SIZE1">
                         <xs:complexType>
                            <xs:all minOccurs="1" maxOccurs="1">
                               <xs:element name="DISPLAY_TEXT" nillable="true">
@@ -576,7 +576,147 @@
                            </xs:all>
                         </xs:complexType>
                      </xs:element>
-                     <xs:element name="NO_OF_COPIES">
+                     <xs:element name="NO_OF_LABELS1">
+                        <xs:complexType>
+                           <xs:all minOccurs="1" maxOccurs="1">
+                              <xs:element name="DISPLAY_TEXT" nillable="true">
+                                 <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                       <xs:maxLength value="200"/>
+                                    </xs:restriction>
+                                 </xs:simpleType>
+                              </xs:element>
+                              <xs:element name="VALUE" nillable="true">
+                                 <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                       <xs:maxLength value="200"/>
+                                    </xs:restriction>
+                                 </xs:simpleType>
+                              </xs:element>
+                           </xs:all>
+                        </xs:complexType>
+                     </xs:element>
+                     <xs:element name="NO_OF_COPIES1">
+                        <xs:complexType>
+                           <xs:all minOccurs="1" maxOccurs="1">
+                              <xs:element name="DISPLAY_TEXT" nillable="true">
+                                 <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                       <xs:maxLength value="200"/>
+                                    </xs:restriction>
+                                 </xs:simpleType>
+                              </xs:element>
+                              <xs:element name="VALUE" nillable="true">
+                                 <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                       <xs:maxLength value="200"/>
+                                    </xs:restriction>
+                                 </xs:simpleType>
+                              </xs:element>
+                           </xs:all>
+                        </xs:complexType>
+                     </xs:element>
+                     <xs:element name="ORIGIN_PACK_SIZE2">
+                        <xs:complexType>
+                           <xs:all minOccurs="1" maxOccurs="1">
+                              <xs:element name="DISPLAY_TEXT" nillable="true">
+                                 <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                       <xs:maxLength value="200"/>
+                                    </xs:restriction>
+                                 </xs:simpleType>
+                              </xs:element>
+                              <xs:element name="VALUE" nillable="true">
+                                 <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                       <xs:maxLength value="200"/>
+                                    </xs:restriction>
+                                 </xs:simpleType>
+                              </xs:element>
+                           </xs:all>
+                        </xs:complexType>
+                     </xs:element>
+                     <xs:element name="NO_OF_LABELS2">
+                        <xs:complexType>
+                           <xs:all minOccurs="1" maxOccurs="1">
+                              <xs:element name="DISPLAY_TEXT" nillable="true">
+                                 <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                       <xs:maxLength value="200"/>
+                                    </xs:restriction>
+                                 </xs:simpleType>
+                              </xs:element>
+                              <xs:element name="VALUE" nillable="true">
+                                 <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                       <xs:maxLength value="200"/>
+                                    </xs:restriction>
+                                 </xs:simpleType>
+                              </xs:element>
+                           </xs:all>
+                        </xs:complexType>
+                     </xs:element>
+                     <xs:element name="NO_OF_COPIES2">
+                        <xs:complexType>
+                           <xs:all minOccurs="1" maxOccurs="1">
+                              <xs:element name="DISPLAY_TEXT" nillable="true">
+                                 <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                       <xs:maxLength value="200"/>
+                                    </xs:restriction>
+                                 </xs:simpleType>
+                              </xs:element>
+                              <xs:element name="VALUE" nillable="true">
+                                 <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                       <xs:maxLength value="200"/>
+                                    </xs:restriction>
+                                 </xs:simpleType>
+                              </xs:element>
+                           </xs:all>
+                        </xs:complexType>
+                     </xs:element>
+                     <xs:element name="ORIGIN_PACK_SIZE3">
+                        <xs:complexType>
+                           <xs:all minOccurs="1" maxOccurs="1">
+                              <xs:element name="DISPLAY_TEXT" nillable="true">
+                                 <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                       <xs:maxLength value="200"/>
+                                    </xs:restriction>
+                                 </xs:simpleType>
+                              </xs:element>
+                              <xs:element name="VALUE" nillable="true">
+                                 <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                       <xs:maxLength value="200"/>
+                                    </xs:restriction>
+                                 </xs:simpleType>
+                              </xs:element>
+                           </xs:all>
+                        </xs:complexType>
+                     </xs:element>
+                     <xs:element name="NO_OF_LABELS3">
+                        <xs:complexType>
+                           <xs:all minOccurs="1" maxOccurs="1">
+                              <xs:element name="DISPLAY_TEXT" nillable="true">
+                                 <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                       <xs:maxLength value="200"/>
+                                    </xs:restriction>
+                                 </xs:simpleType>
+                              </xs:element>
+                              <xs:element name="VALUE" nillable="true">
+                                 <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                       <xs:maxLength value="200"/>
+                                    </xs:restriction>
+                                 </xs:simpleType>
+                              </xs:element>
+                           </xs:all>
+                        </xs:complexType>
+                     </xs:element>
+                     <xs:element name="NO_OF_COPIES3">
                         <xs:complexType>
                            <xs:all minOccurs="1" maxOccurs="1">
                               <xs:element name="DISPLAY_TEXT" nillable="true">
