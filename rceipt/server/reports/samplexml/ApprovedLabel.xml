@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<APPROVED_LABEL_REP_REQUEST
+   xmlns="urn:ifsworld-com:approved_label_rep"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="urn:ifsworld-com:approved_label_rep ../schemas/ApprovedLabel.xsd">
+   <PROCESSING_INFO>
+      <FORMATTING_OPTIONS>
+         <COPIES>1</COPIES>
+         <PAGE_FROM>1</PAGE_FROM>
+         <PAGE_TO>99</PAGE_TO>
+         <LANG_CODE>en</LANG_CODE>
+         <LAYOUT_NAME/>
+         <PRINT_DIRECTORY>.</PRINT_DIRECTORY>
+         <LAYOUT_FILE/>
+         <SELECTED_PRINTER/>
+         <LANGUAGE_LAYOUT_FILE/>
+         <PAPER_FORMAT/>
+      </FORMATTING_OPTIONS>
+      <PROCESSING_ATTRIBUTES>
+         <EXECUTION_TIME>2009-01-01T11:22:00</EXECUTION_TIME>
+         <ORDERED_BY/>
+         <JOB_ID>12345</JOB_ID>
+         <COMMENT/>
+         <ORDER_TIME>2009-01-01T11:22:00</ORDER_TIME>
+         <REPORT_TITLE>Approved Label</REPORT_TITLE>
+         <PRINTED_BY/>
+         <CREATED/>
+      </PROCESSING_ATTRIBUTES>
+      <STANDARD_TRANSLATIONS>
+         <ATTRIBUTE_DISPLAY_TEXTS>
+            <EXECUTION_TIME>Execution Time:</EXECUTION_TIME>
+            <ORDERED_BY>Ordered By:</ORDERED_BY>
+            <JOB_ID>Job Id:</JOB_ID>
+            <COMMENT>Comment:</COMMENT>
+            <ORDER_TIME>Order Time:</ORDER_TIME>
+            <REPORT_TITLE>Report:</REPORT_TITLE>
+            <PRINTED_BY>Printed By:</PRINTED_BY>
+            <CURRENT_TIME>Current Time:</CURRENT_TIME>
+            <CURRENT_DATE>Current Date:</CURRENT_DATE>
+            <PAGE>Page</PAGE>
+            <END_OF_REPORT>-------- End of Report --------</END_OF_REPORT>
+            <REPORT_PARAMETERS>Rep. Params:</REPORT_PARAMETERS>
+            <APPLICATION_TEXT>IFS Applications</APPLICATION_TEXT>
+            <CREATED>Created:</CREATED>
+            <NONE>none</NONE>
+            <NOTES>Notes:</NOTES>
+            <NO_DATA_FOUND>No data found</NO_DATA_FOUND>
+         </ATTRIBUTE_DISPLAY_TEXTS>
+         <SITE_TEXTS>
+            <COMPANY_NAME/>
+            <SITE_TEXT_1/>
+            <SITE_TEXT_2/>
+            <SITE_TEXT_3/>
+            <SITE_TEXT_4/>
+            <SITE_TEXT_5/>
+            <SITE_TEXT_6/>
+            <SITE_TEXT_7/>
+            <SITE_TEXT_8/>
+            <SITE_TEXT_9/>
+            <SITE_TEXT_10/>
+         </SITE_TEXTS>
+      </STANDARD_TRANSLATIONS>
+   </PROCESSING_INFO>
+   <APPROVED_LABEL_REP_DATA_ASSEMBLY_PARAMETERS>
+      <RECEIPT_SEQUENCE>
+         <DISPLAY_TEXT>Receipt Sequence:</DISPLAY_TEXT>
+         <VALUE/>
+      </RECEIPT_SEQUENCE>
+      <CONTRACT>
+         <DISPLAY_TEXT>Contract:</DISPLAY_TEXT>
+         <VALUE/>
+      </CONTRACT>
+      <PART_NO>
+         <DISPLAY_TEXT>Part No:</DISPLAY_TEXT>
+         <VALUE/>
+      </PART_NO>
+      <CONFIGURATION_ID>
+         <DISPLAY_TEXT>Configuration Id:</DISPLAY_TEXT>
+         <VALUE/>
+      </CONFIGURATION_ID>
+      <LOCATION_NO>
+         <DISPLAY_TEXT>Location No:</DISPLAY_TEXT>
+         <VALUE/>
+      </LOCATION_NO>
+      <LOT_BATCH_NO>
+         <DISPLAY_TEXT>Lot Batch No:</DISPLAY_TEXT>
+         <VALUE/>
+      </LOT_BATCH_NO>
+      <SERIAL_NO>
+         <DISPLAY_TEXT>Serial No:</DISPLAY_TEXT>
+         <VALUE/>
+      </SERIAL_NO>
+      <E_C>
+         <DISPLAY_TEXT>E C:</DISPLAY_TEXT>
+         <VALUE/>
+      </E_C>
+      <W_D_R_NO>
+         <DISPLAY_TEXT>W D R No:</DISPLAY_TEXT>
+         <VALUE/>
+      </W_D_R_NO>
+      <ACTIVITY_SEQ>
+         <DISPLAY_TEXT>Activity Seq:</DISPLAY_TEXT>
+         <VALUE/>
+      </ACTIVITY_SEQ>
+      <HANDLING_UNIT_ID>
+         <DISPLAY_TEXT>Handling Unit Id:</DISPLAY_TEXT>
+         <VALUE/>
+      </HANDLING_UNIT_ID>
+      <ORIGIN_PACK_SIZE1>
+         <DISPLAY_TEXT>Origin Pack Size 1:</DISPLAY_TEXT>
+         <VALUE/>
+      </ORIGIN_PACK_SIZE1>
+      <NO_OF_LABELS1>
+         <DISPLAY_TEXT>No Of Labels 1:</DISPLAY_TEXT>
+         <VALUE/>
+      </NO_OF_LABELS1>
+      <NO_OF_COPIES1>
+         <DISPLAY_TEXT>No Of Copies 1:</DISPLAY_TEXT>
+         <VALUE/>
+      </NO_OF_COPIES1>
+      <ORIGIN_PACK_SIZE2>
+         <DISPLAY_TEXT>Origin Pack Size 2:</DISPLAY_TEXT>
+         <VALUE/>
+      </ORIGIN_PACK_SIZE2>
+      <NO_OF_LABELS2>
+         <DISPLAY_TEXT>No Of Labels 2:</DISPLAY_TEXT>
+         <VALUE/>
+      </NO_OF_LABELS2>
+      <NO_OF_COPIES2>
+         <DISPLAY_TEXT>No Of Copies 2:</DISPLAY_TEXT>
+         <VALUE/>
+      </NO_OF_COPIES2>
+      <ORIGIN_PACK_SIZE3>
+         <DISPLAY_TEXT>Origin Pack Size 3:</DISPLAY_TEXT>
+         <VALUE/>
+      </ORIGIN_PACK_SIZE3>
+      <NO_OF_LABELS3>
+         <DISPLAY_TEXT>No Of Labels 3:</DISPLAY_TEXT>
+         <VALUE/>
+      </NO_OF_LABELS3>
+      <NO_OF_COPIES3>
+         <DISPLAY_TEXT>No Of Copies 3:</DISPLAY_TEXT>
+         <VALUE/>
+      </NO_OF_COPIES3>
+   </APPROVED_LABEL_REP_DATA_ASSEMBLY_PARAMETERS>
+   <APPROVED_LABEL_REP_ARCHIVE_VARIABLES/>
+   <APPROVED_LABEL_REP_TRANSLATIONS>
+      <REPORT_TEXTS>
+         <APPROVED_LABEL>Sample</APPROVED_LABEL>
+      </REPORT_TEXTS>
+      <ATTRIBUTE_DISPLAY_TEXTS>
+         <ITEMS>
+            <DETAIL>
+               <PART_NO>Part No:</PART_NO>
+               <PACK_QTY>Pack Qty:</PACK_QTY>
+               <LOCATION_NO>Location No:</LOCATION_NO>
+               <BATCH_NO>Batch No:</BATCH_NO>
+               <RECEIVER>Receiver:</RECEIVER>
+               <OWNERSHIP>Ownership:</OWNERSHIP>
+               <SERIAL_NO>Serial No:</SERIAL_NO>
+               <EXPIRATION_DATE>Expiration Date:</EXPIRATION_DATE>
+               <RECEIPT_DATE>Receipt Date:</RECEIPT_DATE>
+               <DEFAULT_LOCATION_NO>Default Location No:</DEFAULT_LOCATION_NO>
+            </DETAIL>
+         </ITEMS>
+      </ATTRIBUTE_DISPLAY_TEXTS>
+   </APPROVED_LABEL_REP_TRANSLATIONS>
+   <APPROVED_LABEL_REP>
+      <ITEMS>
+         <DETAIL>
+            <PART_NO>ABC</PART_NO>
+            <PACK_QTY>123</PACK_QTY>
+            <LOCATION_NO>ABC</LOCATION_NO>
+            <BATCH_NO>ABC</BATCH_NO>
+            <RECEIVER>ABC</RECEIVER>
+            <OWNERSHIP>ABC</OWNERSHIP>
+            <SERIAL_NO>ABC</SERIAL_NO>
+            <EXPIRATION_DATE>2009-01-01</EXPIRATION_DATE>
+            <RECEIPT_DATE>2009-01-01</RECEIPT_DATE>
+            <DEFAULT_LOCATION_NO>ABC</DEFAULT_LOCATION_NO>
+         </DETAIL>
+         <DETAIL>
+            <PART_NO>ABC</PART_NO>
+            <PACK_QTY>123</PACK_QTY>
+            <LOCATION_NO>ABC</LOCATION_NO>
+            <BATCH_NO>ABC</BATCH_NO>
+            <RECEIVER>ABC</RECEIVER>
+            <OWNERSHIP>ABC</OWNERSHIP>
+            <SERIAL_NO>ABC</SERIAL_NO>
+            <EXPIRATION_DATE>2009-01-01</EXPIRATION_DATE>
+            <RECEIPT_DATE>2009-01-01</RECEIPT_DATE>
+            <DEFAULT_LOCATION_NO>ABC</DEFAULT_LOCATION_NO>
+         </DETAIL>
+      </ITEMS>
+   </APPROVED_LABEL_REP>
+</APPROVED_LABEL_REP_REQUEST>
