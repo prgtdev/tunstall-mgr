@@ -2709,6 +2709,135 @@ BEGIN
    
       RETURN NVL(cash_collected_, 0);
 END Get_Team_Cash_Collected;
+
+FUNCTION Check_Cr_Note_Concecutive(company_        IN VARCHAR2,
+                                      credit_manager_ IN VARCHAR2,
+                                      identity_       IN VARCHAR2) RETURN VARCHAR2
+   
+IS
+      note_state1_ VARCHAR2(100);
+      note_state2_ VARCHAR2(100);
+      temp_        VARCHAR2(5) := 'FALSE';
+      itr_         NUMBER := 0;
+   
+      CURSOR get_inv_headers(identity_       VARCHAR2,
+                             credit_manager_ VARCHAR2,
+                             company_        VARCHAR2) IS
+         SELECT company, identity, invoice_id
+           FROM outgoing_invoice_qry
+          WHERE identity = identity_
+            and Customer_Credit_Info_API.Get_Manager(company_, identity_) LIKE  NVL(credit_manager_, '%')
+            AND company = company_;
+   
+      CURSOR get_inv_header_notes(company_    VARCHAR2,
+                                  identity_   VARCHAR2,
+                                  invoice_id_ NUMBER) IS
+         SELECT *
+           FROM (SELECT Credit_Note_Status_API.Get_Note_Status_Description(company,note_status_id) status
+                   FROM invoice_header_notes
+                  WHERE company = company_
+                    AND identity = identity_
+                    AND party_type = 'Customer'
+                    AND invoice_id = invoice_id_
+                  ORDER BY follow_up_date DESC, note_id DESC)
+          WHERE rownum <= 2;
+   
+BEGIN
+   
+      FOR rec_ IN get_inv_headers(identity_, credit_manager_, company_) LOOP
+         
+         FOR note_rec_ IN get_inv_header_notes(rec_.company,
+                                               rec_.identity,
+                                               rec_.invoice_id) LOOP
+            itr_ := itr_ + 1;
+            IF (itr_ = 1) THEN
+               note_state1_ := note_rec_.status;
+            ELSIF (itr_ = 2) THEN
+               note_state2_ := note_rec_.status;
+            END IF;
+         END LOOP;
+      
+         IF (note_state1_ IS NOT NULL AND (note_state1_ = note_state2_)) THEN
+            temp_ := 'TRUE';
+            EXIT;
+         END IF;      
+      END LOOP;
+      RETURN temp_;
+END Check_Cr_Note_Concecutive;
+   
+FUNCTION Check_Followup_Date_Mised(
+   company_        IN VARCHAR2,
+   credit_manager_  IN VARCHAR2,
+   identity_       IN VARCHAR2) RETURN VARCHAR2 
+IS
+   
+   inv_state_ VARCHAR2(100);
+   inv_due_ DATE;
+   follow_up_date_ DATE;
+   days_missed_ NUMBER;  
+   temp_   VARCHAR2(5) := 'FALSE';
+   CURSOR get_inv_headers(identity_     VARCHAR2,
+                        credit_manager_ VARCHAR2,
+                        company_        VARCHAR2) IS
+      SELECT company, identity, invoice_id
+        FROM outgoing_invoice_qry
+       WHERE identity = identity_
+         and Customer_Credit_Info_API.Get_Manager(company_,identity_) LIKE  NVL(credit_manager_, '%')
+         AND company = company_;
+
+   CURSOR get_inv_header_notes(company_  VARCHAR2,
+                             identity_   VARCHAR2,
+                             invoice_id_ NUMBER) IS
+      SELECT *
+        FROM (SELECT follow_up_date
+                FROM invoice_header_notes
+               WHERE company = company_
+                 AND identity = identity_
+                 AND party_type = 'Customer'
+                 AND invoice_id = invoice_id_
+               ORDER BY follow_up_date DESC, note_id DESC)
+       WHERE rownum = 1;
+   
+   CURSOR get_inv_info(company_ VARCHAR2, identity_ VARCHAR2, invoice_id_ NUMBER )IS
+   SELECT inv_state, due_date
+     FROM invoice_ledger_item_cu_qry
+    WHERE company =company_
+      AND (identity = identity_ AND invoice_id = invoice_id_ );
+BEGIN
+
+      FOR rec_ IN get_inv_headers(identity_, credit_manager_, company_) LOOP
+         OPEN get_inv_header_notes(rec_.company,
+                                   rec_.identity,
+                                   rec_.invoice_id);
+         FETCH get_inv_header_notes
+           INTO follow_up_date_;
+         CLOSE get_inv_header_notes;
+         
+         SELECT days_missed
+           INTO days_missed_
+           FROM (SELECT count(work_day)days_missed
+                   FROM WORK_TIME_COUNTER_TAB t
+                  WHERE t.calendar_id ='*'
+                  AND t.work_day BETWEEN follow_up_date_ AND sysdate 
+                  );
+         
+      OPEN  get_inv_info(rec_.company, rec_.identity,rec_.invoice_id);
+     FETCH  get_inv_info 
+      INTO inv_state_,inv_due_;
+      CLOSE get_inv_info;
+                
+      IF(inv_state_ NOT IN ('Preliminary', 'Cancelled', 'PaidPosted')AND inv_due_< SYSDATE AND days_missed_ >=4 )THEN 
+         temp_ := 'TRUE';
+         EXIT;
+      END IF;       
+      END LOOP;
+      
+      IF(Check_Cr_Note_Concecutive(company_,credit_manager_, identity_ )='TRUE')THEN
+       temp_ := 'TRUE';
+      END IF;
+      
+  RETURN temp_;  
+END  Check_Followup_Date_Mised;
 --C0368 EntChathI (END)
 
 --C0401 EntPrageG (START)
