@@ -1616,7 +1616,7 @@ END Create_Functional_Object__;
          IF (rec_.state not in ('Completed')) THEN
             valid_to_close_ := false;
             Client_SYS.Add_To_Attr('CF$_ERROR_REPORTED',
-                                   'Sales Order must be in Completed status.',
+                                   'Sales Contract must be in Completed status.',
                                    attr_);
             SALES_CONTRACT_CFP.Cf_Modify__(info_,rec_.objid,attr_,'','DO');
             CONTINUE;
