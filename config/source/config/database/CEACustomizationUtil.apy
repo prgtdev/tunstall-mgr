@@ -1616,7 +1616,7 @@ END Create_Functional_Object__;
          IF (rec_.state not in ('Completed')) THEN
             valid_to_close_ := false;
             Client_SYS.Add_To_Attr('CF$_ERROR_REPORTED',
-                                   'Sales Order must be in Completed status.',
+                                   'Sales Contract must be in Completed status.',
                                    attr_);
             SALES_CONTRACT_CFP.Cf_Modify__(info_,rec_.objid,attr_,'','DO');
             CONTINUE;
@@ -2287,8 +2287,7 @@ END Check_Credit_Note_Queries_CM;
   
 FUNCTION Check_Cr_Note_Queries_All_CM(
    company_    IN VARCHAR2,
-   identity_   IN VARCHAR2,
-   type_       IN VARCHAR2) RETURN VARCHAR2 
+   identity_   IN VARCHAR2) RETURN VARCHAR2 
 IS
    follow_up_date_ DATE;
    status_         VARCHAR2(100);
@@ -2337,21 +2336,10 @@ BEGIN
        INTO inv_state_;
       CLOSE get_inv_info;
 
-      IF (type_ = 'Open') THEN
-         IF (follow_up_date_ IS NOT NULL AND follow_up_date_ > SYSDATE AND
-            status_ IN ('In Query') AND
-            inv_state_ NOT IN ('Preliminary', 'Cancelled', 'PaidPosted')) THEN
+         IF (status_ IN ('In Query') AND inv_state_ NOT IN ('Preliminary', 'Cancelled', 'PaidPosted')) THEN
             temp_ := 'TRUE';
             EXIT;
-         END IF;
-      ELSIF (type_ = 'Overdue') THEN
-         IF (follow_up_date_ IS NOT NULL AND follow_up_date_ < SYSDATE AND
-            status_ IN ('In Query') AND
-            inv_state_ NOT IN ('Preliminary', 'Cancelled', 'PaidPosted')) THEN
-            temp_ := 'TRUE';
-            EXIT;
-         END IF;
-      END IF;
+         END IF;   
    END LOOP;
    RETURN temp_;
 

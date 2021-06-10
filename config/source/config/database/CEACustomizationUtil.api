@@ -225,8 +225,7 @@ FUNCTION Check_Inv_Header_CM(
    
 FUNCTION Check_Cr_Note_Queries_All_CM(
    company_    IN VARCHAR2,
-   identity_   IN VARCHAR2,
-   type_       IN varchar2) RETURN VARCHAR2;
+   identity_   IN VARCHAR2) RETURN VARCHAR2;
    
 FUNCTION Get_CA_Open_Items_Count(
    company_        IN VARCHAR2,
