@@ -310,6 +310,11 @@ FUNCTION Calculate_Idle_Time (
    edate_    IN VARCHAR2) RETURN NUMBER;
 --240521 ISURUG Calculate Idle Time (END)
 
+-- C209 EntMahesR (START)
+FUNCTION Get_Stock_Available_Per_Site (
+   contract_         IN VARCHAR2,
+   part_no_          IN VARCHAR2 ) RETURN NUMBER;
+-- C209 EntMahesR (END)
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------
 -----------------------------------------------------------------------------
