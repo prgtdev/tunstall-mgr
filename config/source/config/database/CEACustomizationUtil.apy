@@ -3322,15 +3322,15 @@ IS
       FROM mrp_part_supply_demand_all     
       WHERE contract = '2011'
       AND part_no = part_no_
-      AND required_date BETWEEN SYSDATE AND TO_DATE(required_date_,'DD/MM/YYYY')
-      GROUP BY contract, part_no;   
+      AND required_date BETWEEN SYSDATE AND required_date_
+      GROUP BY contract, part_no; 
 BEGIN
    OPEN get_mrp_total_demand;
    FETCH get_mrp_total_demand INTO mrp_total_demand_;
-   CLOSE get_mrp_total_demand; 
+   CLOSE get_mrp_total_demand;    
+   RETURN mrp_total_demand_;   
    
-   RETURN mrp_total_demand_; 
-END Get_Total_Mrp_Demand;   
+END Get_Total_Mrp_Demand; 
 -- C209 EntMahesR (END)
 
 -----------------------------------------------------------------------------
