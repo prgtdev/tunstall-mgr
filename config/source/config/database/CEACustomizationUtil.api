@@ -136,6 +136,8 @@ FUNCTION Check_Cause_Discount(
    company_ IN varchar2,
    site_    IN VARCHAR2,
    type_    IN varchar2) return VARCHAR2 ;
+
+  FUNCTION Check_Inv_Preview(wo_no_ IN NUMBER) RETURN VARCHAR2;
 --C0613 EntChathI (END)
 
 --C0380 EntPrageG (START)
