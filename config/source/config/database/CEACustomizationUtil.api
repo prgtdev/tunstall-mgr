@@ -318,6 +318,11 @@ FUNCTION Get_Stock_Available_Per_Site (
 FUNCTION Get_Total_Mrp_Demand (
    part_no_         IN VARCHAR2,
    required_date_   IN DATE ) RETURN NUMBER;
+
+FUNCTION Get_Total_Mrp_Specific_Demand(
+   part_no_              IN VARCHAR2,
+   prod_structure_list_  IN VARCHAR2,
+   required_date_        IN DATE) RETURN NUMBER;
 -- C209 EntMahesR (END)
 -----------------------------------------------------------------------------
 -------------------- FOUNDATION1 METHODS ------------------------------------

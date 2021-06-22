@@ -3403,13 +3403,11 @@ IS
       WHERE contract = contract_
       AND part_no = part_no_
       GROUP BY contract, part_no; 
-BEGIN
+BEGIN   
    OPEN get_available_total;
    FETCH get_available_total INTO total_qty_available_;
-   CLOSE get_available_total; 
-   
-   RETURN total_qty_available_; 
-   
+   CLOSE get_available_total;    
+   RETURN total_qty_available_;    
 END Get_Stock_Available_Per_Site;
 
 -- Note that here contract 2011 has hardcoded because it is the only manufacturing site
@@ -3424,15 +3422,44 @@ IS
       FROM mrp_part_supply_demand_all     
       WHERE contract = '2011'
       AND part_no = part_no_
-      AND required_date BETWEEN SYSDATE AND required_date_
-      GROUP BY contract, part_no; 
-BEGIN
+      AND required_date BETWEEN TRUNC(SYSDATE) AND required_date_;      
+BEGIN   
    OPEN get_mrp_total_demand;
    FETCH get_mrp_total_demand INTO mrp_total_demand_;
-   CLOSE get_mrp_total_demand;    
-   RETURN mrp_total_demand_;   
-   
-END Get_Total_Mrp_Demand; 
+   CLOSE get_mrp_total_demand; 
+   RETURN mrp_total_demand_;     
+END Get_Total_Mrp_Demand;
+
+-- Note that here contract 2011 has hardcoded because it is the only manufacturing site
+-- and this will be mentioned in delivery notes as well
+FUNCTION Get_Total_Mrp_Specific_Demand(
+   part_no_              IN VARCHAR2,
+   prod_structure_list_  IN VARCHAR2,
+   required_date_        IN DATE ) RETURN NUMBER
+IS
+   mrp_specific_total_demand_  NUMBER := 0;
+   mrp_specific_demand_        NUMBER := 0;   
+   product_structures_         Utility_SYS.STRING_TABLE;
+   no_of_structures_           NUMBER;
+   count_                      NUMBER := 0;
+   CURSOR get_mrp_specific_total_demand(part_no_ VARCHAR2, parent_part_no_ VARCHAR2) IS  
+      SELECT SUM(projected_onhand)
+      FROM mrp_part_supply_demand_all     
+      WHERE contract = '2011'
+      AND part_no = part_no_
+      AND parent_part_no = parent_part_no_
+      AND required_date BETWEEN TRUNC(SYSDATE) AND required_date_;      
+BEGIN  
+   Utility_SYS.Tokenize(prod_structure_list_, ';', product_structures_, no_of_structures_);
+   WHILE (count_ < no_of_structures_) LOOP       
+      count_ := count_+ 1;
+      OPEN get_mrp_specific_total_demand(part_no_, product_structures_(count_));
+      FETCH get_mrp_specific_total_demand INTO mrp_specific_demand_;
+      CLOSE get_mrp_specific_total_demand;
+      mrp_specific_total_demand_ := mrp_specific_total_demand_ + NVL(mrp_specific_demand_, 0);
+   END LOOP;  
+   RETURN mrp_specific_total_demand_;     
+END Get_Total_Mrp_Specific_Demand;
 -- C209 EntMahesR (END)
 
 -----------------------------------------------------------------------------
