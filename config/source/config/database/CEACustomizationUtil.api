@@ -133,8 +133,6 @@ PROCEDURE Close_Non_Finance_User_Group;
 --C0613 EntChathI (START)
 FUNCTION Check_Cause_Discount(
    wo_no_   IN NUMBER,
-   company_ IN varchar2,
-   site_    IN VARCHAR2,
    type_    IN varchar2) return VARCHAR2 ;
 
   FUNCTION Check_Inv_Preview(wo_no_ IN NUMBER) RETURN VARCHAR2;
