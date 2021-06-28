@@ -3516,6 +3516,30 @@ BEGIN
    END LOOP;  
    RETURN mrp_specific_total_demand_;     
 END Get_Total_Mrp_Specific_Demand;
+
+-- Note that here contract 2011 has hardcoded because it is the only manufacturing site
+-- and this will be mentioned in delivery notes as well
+FUNCTION Get_Total_Sales_Mrp_Demand (
+   part_no_         IN VARCHAR2,
+   required_date_   IN DATE ) RETURN NUMBER
+IS 
+   mrp_total_sales_demand_  NUMBER;
+   -- Note that here mrp_source_db '1' represents Cust Order entries and 
+   -- mrp_source_db '27' represents Distribution Order entries 
+   CURSOR get_mrp_total_sales_demand IS  
+      SELECT SUM(projected_onhand)
+      FROM mrp_part_supply_demand_all     
+      WHERE contract = '2011'
+      AND part_no = part_no_
+      AND (mrp_source_db = '1' OR mrp_source_db ='27')
+      AND required_date BETWEEN TRUNC(SYSDATE) AND required_date_;        
+BEGIN   
+   OPEN get_mrp_total_sales_demand;
+   FETCH get_mrp_total_sales_demand INTO mrp_total_sales_demand_;
+   CLOSE get_mrp_total_sales_demand; 
+   RETURN mrp_total_sales_demand_;     
+END Get_Total_Sales_Mrp_Demand;
+
 -- C209 EntMahesR (END)
 
 -- C0321 EntChamuA (START)
