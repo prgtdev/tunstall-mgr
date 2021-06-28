@@ -3384,7 +3384,7 @@ END Calculate_Idle_Time;
 -- C209 EntMahesR (START)
 -- Note that here contract 2011 has hardcoded because it is the only manufacturing site
 -- and this will be mentioned in delivery notes as well
-FUNCTION Check_Comp_Exist_In_Structure(
+FUNCTION Get_Occurrence_Count(
    component_part_no_   IN VARCHAR2,
    prod_structure_list_  IN VARCHAR2) RETURN NUMBER
 IS
@@ -3413,7 +3413,7 @@ BEGIN
       END  IF;
       CLOSE check_exist;
    END LOOP;  
-END Check_Comp_Exist_In_Structure;   
+END Get_Occurrence_Count;   
    
 
 -- Note that here contract '2011' has hardcoded because it is the only manufacturing site.
