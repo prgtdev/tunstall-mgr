@@ -3382,7 +3382,8 @@ END Calculate_Idle_Time;
 --240521 ISURUG Calculate Idle Time (END)
 
 -- C209 EntMahesR (START)
-
+-- Note that here contract 2011 has hardcoded because it is the only manufacturing site
+-- and this will be mentioned in delivery notes as well
 FUNCTION Check_Comp_Exist_In_Structure(
    component_part_no_   IN VARCHAR2,
    prod_structure_list_  IN VARCHAR2) RETURN NUMBER
