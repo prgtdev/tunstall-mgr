@@ -3516,5 +3516,14 @@ BEGIN
 END Get_Total_Mrp_Specific_Demand;
 -- C209 EntMahesR (END)
 
- 
+-- C0321 EntChamuA (START)
+FUNCTION Attach_Docs_In_PO (xml_ CLOB) RETURN CLOB
+
+IS
+   
+BEGIN
+   RETURN xml_;
+
+END Attach_Docs_In_PO;
+-- C0321 EntChamuA (END)
 -------------------- LU  NEW METHODS -------------------------------------
