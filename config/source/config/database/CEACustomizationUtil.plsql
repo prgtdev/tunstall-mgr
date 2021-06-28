@@ -3382,6 +3382,38 @@ END Calculate_Idle_Time;
 --240521 ISURUG Calculate Idle Time (END)
 
 -- C209 EntMahesR (START)
+-- C209 EntMahesR (START)
+-- Note that here contract '2011' has hardcoded because it is the only manufacturing site.
+-- Also considering Structure Type 'Manufacturing'('M') only in the product structure and this will be mentioned in delivery notes as well.
+FUNCTION Check_Phrase_In_Out_Dates(
+   part_no_             IN VARCHAR2,   
+   revision_no_         IN VARCHAR2,
+   required_date_       IN DATE) RETURN NUMBER
+IS   
+   eff_phase_in_date_    DATE;
+   eff_phase_out_date_   DATE;
+   
+   CURSOR get_dates IS
+      SELECT eff_phase_in_date, eff_phase_out_date
+      FROM prod_structure_head
+      WHERE contract = '2011' 
+      AND part_no = part_no_
+      AND eng_chg_level =  revision_no_
+      AND bom_type_db = 'M';      
+BEGIN
+   OPEN get_dates;
+   FETCH get_dates INTO eff_phase_in_date_, eff_phase_out_date_;
+   CLOSE get_dates;  
+   IF (TRUNC(eff_phase_in_date_) > TRUNC(SYSDATE)) THEN
+      RETURN 0;
+   ELSIF (TRUNC(required_date_) > TRUNC(eff_phase_in_date_) AND TRUNC(required_date_) > TRUNC(eff_phase_out_date_)) THEN 
+      RETURN 0;
+   ELSIF (Prod_Struct_Alternate_API.Get_State_Db('2011', part_no_, revision_no_, 'M', '*' ) != 'Buildable') THEN  
+      RETURN 0; 
+   END IF;   
+   RETURN 1;   
+END Check_Phrase_In_Out_Dates;
+
 FUNCTION Get_Stock_Available_Per_Site (
    contract_   IN VARCHAR2,
    part_no_    IN VARCHAR2 ) RETURN NUMBER
