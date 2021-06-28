@@ -3414,11 +3414,11 @@ BEGIN
       CLOSE check_exist;
    END LOOP; 
    RETURN no_of_occurences_;
-END Get_Occurrence_Count;   
-   
+END Get_Occurrence_Count; 
 
 -- Note that here contract '2011' has hardcoded because it is the only manufacturing site.
--- Also considering Structure Type 'Manufacturing'('M') only in the product structure and this will be mentioned in delivery notes as well.
+-- Also considering Structure Type 'Manufacturing'('M') only in the product structure and 
+-- this will be mentioned in delivery notes as well.
 FUNCTION Check_Phrase_In_Out_Dates(
    part_no_             IN VARCHAR2,   
    revision_no_         IN VARCHAR2,
