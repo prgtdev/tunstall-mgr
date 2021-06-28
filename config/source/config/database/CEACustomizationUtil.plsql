@@ -3412,7 +3412,8 @@ BEGIN
          no_of_occurences_ := no_of_occurences_ + found_;
       END  IF;
       CLOSE check_exist;
-   END LOOP;  
+   END LOOP; 
+   RETURN no_of_occurences_;
 END Get_Occurrence_Count;   
    
 
