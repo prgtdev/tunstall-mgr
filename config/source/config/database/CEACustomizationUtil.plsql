@@ -3382,7 +3382,39 @@ END Calculate_Idle_Time;
 --240521 ISURUG Calculate Idle Time (END)
 
 -- C209 EntMahesR (START)
--- C209 EntMahesR (START)
+
+FUNCTION Check_Comp_Exist_In_Structure(
+   component_part_no_   IN VARCHAR2,
+   prod_structure_list_  IN VARCHAR2) RETURN NUMBER
+IS
+   product_structures_   Utility_SYS.STRING_TABLE;
+   no_of_structures_     NUMBER;
+   count_                NUMBER := 0;
+   no_of_occurences_     NUMBER := 0;
+   found_                NUMBER := 0;
+   
+   CURSOR check_exist(part_no_ VARCHAR2) IS
+      SELECT 1 FROM(SELECT component_part
+                    FROM prod_structure 
+                    START WITH part_no = part_no_
+                    CONNECT BY PRIOR component_part = part_no
+                    AND contract = '2011')
+      WHERE component_part = component_part_no_;
+   
+BEGIN
+   Utility_SYS.Tokenize(prod_structure_list_, ';', product_structures_, no_of_structures_);
+   WHILE (count_ < no_of_structures_) LOOP       
+      count_ := count_+ 1;
+      OPEN check_exist(product_structures_(count_));
+      FETCH check_exist INTO found_;
+      IF check_exist%FOUND THEN
+         no_of_occurences_ := no_of_occurences_ + found_;
+      END  IF;
+      CLOSE check_exist;
+   END LOOP;  
+END Check_Comp_Exist_In_Structure;   
+   
+
 -- Note that here contract '2011' has hardcoded because it is the only manufacturing site.
 -- Also considering Structure Type 'Manufacturing'('M') only in the product structure and this will be mentioned in delivery notes as well.
 FUNCTION Check_Phrase_In_Out_Dates(
