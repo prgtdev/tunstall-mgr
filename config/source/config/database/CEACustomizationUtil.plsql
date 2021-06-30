@@ -2282,7 +2282,60 @@ BEGIN
       CLOSE get_cash_collected;
    
       RETURN NVL(cash_collected_, 0);
-END Get_Cash_Collected;
+   END Get_Cash_Collected;
+   
+   FUNCTION Check_Inv_Courtesy_Call(company_        IN VARCHAR2,
+                                   identity_       IN VARCHAR2)  RETURN VARCHAR2 IS
+   
+      status_ VARCHAR2(100);
+      inv_state_ VARCHAR2(100);
+      temp_   VARCHAR2(5) := 'FALSE';
+      
+      CURSOR get_inv_headers(identity_       VARCHAR2,
+                             company_        VARCHAR2) IS
+         SELECT identity,invoice_id
+           FROM OUTGOING_INVOICE_QRY
+          WHERE identity = identity_
+            AND company LIKE NVL(company_,'%');
+   
+      CURSOR get_inv_header_notes(company_    VARCHAR2, identity_ VARCHAR2, invoice_id_ NUMBER) is
+         SELECT *
+           FROM (SELECT Credit_Note_Status_API.Get_Note_Status_Description(COMPANY, NOTE_STATUS_ID)
+                   FROM invoice_header_notes 
+                  WHERE company = company_
+                    AND identity = identity_
+                    AND party_type = 'Customer'
+                    AND invoice_id = invoice_id_
+                  ORDER BY note_date DESC, note_id DESC)
+          WHERE ROWNUM = 1;
+          
+          CURSOR get_inv_info(company_ VARCHAR2,identity_ VARCHAR2, invoice_id_ NUMBER) IS
+         SELECT inv_state
+           FROM INVOICE_LEDGER_ITEM_CU_QRY
+          WHERE company = company_
+            AND identity = identity_
+            AND invoice_id = invoice_id_
+            AND open_amount>=10000;
+   
+   BEGIN
+   
+      FOR rec_ in get_inv_headers(identity_, company_) LOOP
+         OPEN get_inv_header_notes(company_,rec_.identity,rec_.invoice_id);
+         FETCH get_inv_header_notes
+          INTO status_;
+         CLOSE get_inv_header_notes;
+         
+         OPEN get_inv_info(company_, rec_.identity, rec_.invoice_id);
+         FETCH get_inv_info INTO inv_state_;
+         CLOSE get_inv_info;      
+     
+         IF (status_ IN ('Large Invoice Call') AND inv_state_ NOT IN ('Preliminary', 'Cancelled', 'PaidPosted')  ) THEN
+            temp_ := 'TRUE';
+            EXIT;
+         END IF;
+      END LOOP;
+      RETURN temp_;
+   END Check_Inv_Courtesy_Call;
 --C0367 EntChathI (END)
 --C0368 EntChathI (START)
 FUNCTION Check_Credit_Note_Queries_CM(

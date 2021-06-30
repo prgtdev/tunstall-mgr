@@ -209,6 +209,9 @@ FUNCTION Get_Cash_Collected(
    credit_analyst_ IN VARCHAR2,
    company_        IN VARCHAR2,
    target_period_  IN VARCHAR2) RETURN NUMBER; 
+
+FUNCTION Check_Inv_Courtesy_Call(company_        IN VARCHAR2,
+                                 identity_       IN VARCHAR2) RETURN VARCHAR2;
  --C0367 EntChathI (END)
   
 --C0368 EntChathI (START)
