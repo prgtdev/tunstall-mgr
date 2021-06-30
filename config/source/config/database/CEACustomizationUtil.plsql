@@ -2062,8 +2062,7 @@ BEGIN
 
       IF (type_ = 'Open') THEN
          IF (follow_up_date_ IS NOT NULL AND follow_up_date_ > SYSDATE AND
-            status_ IN ('In Query') AND
-            inv_state_ NOT IN ('Preliminary', 'Cancelled', 'PaidPosted')) THEN
+            status_ IN ('In Query') ) THEN
            temp_ := 'TRUE';
            EXIT;
          END IF;
