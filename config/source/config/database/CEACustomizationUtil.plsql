@@ -3552,4 +3552,28 @@ BEGIN
 
 END Attach_Docs_In_PO;
 -- C0321 EntChamuA (END)
+
+--C449 EntChamuA (START)
+FUNCTION Get_Identity(
+   mch_code_ VARCHAR2,
+   contract_ VARCHAR2) RETURN VARCHAR2
+IS
+   return_value_ VARCHAR2(100);
+  
+   CURSOR get_identity(mch_code_ IN VARCHAR2, contract_ IN VARCHAR2) IS
+      SELECT identity
+        FROM equipment_object_party_uiv
+       WHERE mch_code = mch_code_
+         AND contract = contract_;
+BEGIN
+   OPEN get_identity(mch_code_, contract_);
+   FETCH get_identity INTO return_value_;
+   IF(get_identity%NOTFOUND)THEN
+      return_value_ := '';
+   END IF;
+   CLOSE get_identity;
+   
+   RETURN return_value_;
+END Get_Identity;
+--C449 EntChamuA (END)
 -------------------- LU  NEW METHODS -------------------------------------
