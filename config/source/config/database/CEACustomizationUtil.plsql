@@ -3582,10 +3582,10 @@ IS
    file_name_      VARCHAR2(3200);
    attachment_     BLOB;
    type_           VARCHAR2(10);
-   doc_class_      VARCHAR2(2000) := '1200.7001';
+   doc_class_      VARCHAR2(2000):= '1200.7001';
    doc_sheet_      VARCHAR2(100);
    doc_rev_        VARCHAR2(100);
-   doc_number_     VARCHAR2(100) := '*';
+   doc_number_     VARCHAR2(100):= '*';
    attr_           VARCHAR2(3200);
    po_num_         VARCHAR2(3200);
    key_ref_        VARCHAR2(100);
@@ -3598,8 +3598,8 @@ IS
      SELECT t.name, t.message_value, t.body_type
        FROM fndcn_message_body_tab t
       WHERE t.application_message_id = id_
-        AND name IS NOT NULL
-        AND reply = 0;
+        AND t.name IS NOT NULL
+        AND t.reply = 0;
  BEGIN
    app_msg_id_ := App_Context_SYS.Find_Number_Value('APPLICATION_MESSAGE_ID',0);
 
