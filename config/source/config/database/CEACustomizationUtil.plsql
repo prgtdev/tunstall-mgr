@@ -289,7 +289,10 @@ BEGIN
          invoice_header_notes_rec_ := Invoice_Header_Notes_API.Get_By_Rowkey(objkey_);
          Client_SYS.Clear_Attr(attr_);
          Client_SYS.Add_To_Attr(''FOLLOW_UP_DATE'', follow_up_date_ , attr_);
-         IF invoice_header_notes_rec_.note_id IS NOT NULL AND follow_up_date_ <> SYSDATE THEN
+        --C0367 EntChathI (START)          
+        -- IF invoice_header_notes_rec_.note_id IS NOT NULL AND follow_up_date_ <> SYSDATE THEN
+         IF (invoice_header_notes_rec_.note_id IS NOT NULL AND (follow_up_date_ <> SYSDATE OR follow_up_date_ IS NULL) )THEN
+        --C0367 EntChathI (END)
             objversion_ := to_char(invoice_header_notes_rec_.rowversion,''YYYYMMDDHH24MISS'');
             Invoice_Header_Notes_API.Modify__(info_, invoice_header_notes_rec_."rowid",objversion_ , attr_, ''DO'');
          END IF;
@@ -321,7 +324,14 @@ BEGIN
       objkey_:= Invoice_Header_Notes_API.Get_Objkey(company_, invoice_id_, note_id_);
       note_status_days_ := Get_Note_Status_Follow_Up_Days___ (company_ ,note_status_id_ );
 
-      follow_up_date_ := Get_Follow_Up_Date___(calender_id_,note_status_id_,note_status_days_);  
+   --C0367 EntChathI (START) 
+    --follow_up_date_ := Get_Follow_Up_Date___(calender_id_,note_status_id_,note_status_days_);
+    IF(note_status_id_ =2 OR Credit_Note_Status_API.Get_Note_Status_Description(company_ ,note_status_id_)  =''Complete'')THEN
+      follow_up_date_:= NULL;
+    ELSE  
+      follow_up_date_ := Get_Follow_Up_Date___(calender_id_,note_status_id_,note_status_days_); 
+    END IF;  
+   --C0367 EntChathI (END)
       Update_Follow_Up_Date___(objkey_,follow_up_date_);         
    END;';
    RETURN stmt_;
@@ -2314,7 +2324,7 @@ BEGIN
          END IF;
       END LOOP;
       RETURN temp_;
-   END Check_Inv_Courtesy_Call;
+   END Check_Inv_Courtesy_Call;  
 --C0367 EntChathI (END)
 --C0368 EntChathI (START)
 FUNCTION Check_Credit_Note_Queries_CM(
