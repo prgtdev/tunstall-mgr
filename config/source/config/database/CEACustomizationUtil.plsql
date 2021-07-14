@@ -3827,7 +3827,7 @@ BEGIN
    IF (total_task_count_ = 0 ) THEN
       RETURN 0;
    ELSE    
-      RETURN ROUND(sla_met_task_count_/total_task_count_*100);
+      RETURN ROUND(sla_met_task_count_/total_task_count_ * 100);
    END IF;
 END Get_SLA; 
 
@@ -3840,6 +3840,7 @@ IS
    resource_seq_ NUMBER; 
    first_fix_one_task_ass_count_ NUMBER := 0;
    first_fix_many_task_ass_count_ NUMBER := 0;
+   completed_work_order_count_ NUMBER := 0;
    
    CURSOR get_first_fix_one_task_ass(resource_seq_ NUMBER) IS
       SELECT COUNT(1) FROM(SELECT DISTINCT jt.wo_no
@@ -3879,9 +3880,20 @@ IS
                                        group by wo_no)
                                  WHERE count = 1))
       GROUP BY wo_no);
-
+      
+   CURSOR get_completed_work_orders(resource_seq_ NUMBER) IS   
+      SELECT COUNT(DISTINCT wo_no) 
+      FROM(SELECT jt.WO_NO, jei.task_seq
+           FROM jt_execution_instance_uiv jei, jt_task_uiv_cfv jt
+           WHERE jei.resource_seq = resource_seq_
+           AND jei.resource_type_db ='PERSON' 
+           AND jei.task_seq = jt.task_seq
+           AND jei.objstate = 'COMPLETED' 
+           AND jt.company = company_
+           AND TRUNC(jei.work_finish) BETWEEN start_date_ AND end_date_);
 BEGIN
    resource_seq_ := Maint_Person_Employee_API.Get_Resource_Seq(emp_no_, company_);
+   
    OPEN get_first_fix_one_task_ass(resource_seq_);
    FETCH get_first_fix_one_task_ass INTO first_fix_one_task_ass_count_;
    CLOSE get_first_fix_one_task_ass;
@@ -3890,7 +3902,16 @@ BEGIN
    FETCH get_first_fix_many_task_ass INTO first_fix_many_task_ass_count_;
    CLOSE get_first_fix_many_task_ass;
    
-   RETURN first_fix_one_task_ass_count_ + first_fix_many_task_ass_count_;
+   OPEN get_completed_work_orders(resource_seq_);
+   FETCH get_completed_work_orders INTO completed_work_order_count_;
+   CLOSE get_completed_work_orders;
+   
+   IF (completed_work_order_count_ = 0 ) THEN
+      RETURN 0;
+   ELSE    
+      RETURN ROUND((first_fix_one_task_ass_count_ + first_fix_many_task_ass_count_)/completed_work_order_count_ * 100);
+   END IF;  
+   
 END Get_First_Fix;   
 -- C458 EntMahesR (END)
 
