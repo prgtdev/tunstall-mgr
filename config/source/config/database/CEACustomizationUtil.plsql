@@ -2863,8 +2863,7 @@ BEGIN
 END Get_Team_Cash_Collected;
 
 FUNCTION Check_Cr_Note_Concecutive(company_        IN VARCHAR2,
-                                      credit_manager_ IN VARCHAR2,
-                                      identity_       IN VARCHAR2) RETURN VARCHAR2
+                                   identity_       IN VARCHAR2) RETURN VARCHAR2
    
 IS
       note_state1_ VARCHAR2(100);
@@ -2873,12 +2872,10 @@ IS
       itr_         NUMBER := 0;
    
       CURSOR get_inv_headers(identity_       VARCHAR2,
-                             credit_manager_ VARCHAR2,
                              company_        VARCHAR2) IS
          SELECT company, identity, invoice_id
            FROM outgoing_invoice_qry
           WHERE identity = identity_
-            and Customer_Credit_Info_API.Get_Manager(company_, identity_) LIKE  NVL(credit_manager_, '%')
             AND company = company_;
    
       CURSOR get_inv_header_notes(company_    VARCHAR2,
@@ -2896,7 +2893,7 @@ IS
    
 BEGIN
    
-      FOR rec_ IN get_inv_headers(identity_, credit_manager_, company_) LOOP
+      FOR rec_ IN get_inv_headers(identity_, company_) LOOP
          
          FOR note_rec_ IN get_inv_header_notes(rec_.company,
                                                rec_.identity,
@@ -2984,7 +2981,7 @@ BEGIN
       END IF;       
       END LOOP;
       
-      IF(Check_Cr_Note_Concecutive(company_,credit_manager_, identity_ )='TRUE')THEN
+      IF(Check_Cr_Note_Concecutive(company_, identity_ )='TRUE')THEN
        temp_ := 'TRUE';
       END IF;
       
