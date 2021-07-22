@@ -2863,20 +2863,14 @@ BEGIN
 END Get_Team_Cash_Collected;
 
 FUNCTION Check_Cr_Note_Concecutive(company_        IN VARCHAR2,
-                                   identity_       IN VARCHAR2) RETURN VARCHAR2
+                                   identity_       IN VARCHAR2,
+                                   invoice_id_     IN NUMBER) RETURN VARCHAR2
    
 IS
       note_state1_ VARCHAR2(100);
       note_state2_ VARCHAR2(100);
       temp_        VARCHAR2(5) := 'FALSE';
       itr_         NUMBER := 0;
-   
-      CURSOR get_inv_headers(identity_       VARCHAR2,
-                             company_        VARCHAR2) IS
-         SELECT company, identity, invoice_id
-           FROM outgoing_invoice_qry
-          WHERE identity = identity_
-            AND company = company_;
    
       CURSOR get_inv_header_notes(company_    VARCHAR2,
                                   identity_   VARCHAR2,
@@ -2892,12 +2886,9 @@ IS
           WHERE rownum <= 2;
    
 BEGIN
-   
-      FOR rec_ IN get_inv_headers(identity_, company_) LOOP
-         
-         FOR note_rec_ IN get_inv_header_notes(rec_.company,
-                                               rec_.identity,
-                                               rec_.invoice_id) LOOP
+         FOR note_rec_ IN get_inv_header_notes(company_,
+                                               identity_,
+                                               invoice_id_) LOOP
             itr_ := itr_ + 1;
             IF (itr_ = 1) THEN
                note_state1_ := note_rec_.status;
@@ -2908,9 +2899,8 @@ BEGIN
       
          IF (note_state1_ IS NOT NULL AND (note_state1_ = note_state2_)) THEN
             temp_ := 'TRUE';
-            EXIT;
-         END IF;      
-      END LOOP;
+         END IF;     
+
       RETURN temp_;
 END Check_Cr_Note_Concecutive;
    
@@ -2981,9 +2971,9 @@ BEGIN
       END IF;       
       END LOOP;
       
-      IF(Check_Cr_Note_Concecutive(company_, identity_ )='TRUE')THEN
+      /*IF(Check_Cr_Note_Concecutive(company_, identity_ )='TRUE')THEN
        temp_ := 'TRUE';
-      END IF;
+      END IF;*/
       
   RETURN temp_;  
 END  Check_Followup_Date_Mised;
