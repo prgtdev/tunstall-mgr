@@ -2284,45 +2284,32 @@ BEGIN
       RETURN NVL(cash_collected_, 0);
    END Get_Cash_Collected;
    
-   FUNCTION Check_Inv_Courtesy_Call(company_        IN VARCHAR2,
-                                   identity_       IN VARCHAR2)  RETURN VARCHAR2 IS
+   FUNCTION Check_Inv_Courtesy_Call(company_       IN VARCHAR2,
+                                   identity_       IN VARCHAR2,
+                                   invoice_id_     IN NUMBER)  RETURN VARCHAR2 IS
    
-      status_ VARCHAR2(100);
-      inv_state_ VARCHAR2(100);
-      open_amount_ NUMBER;
+      larg_call_ NUMBER;
       temp_   VARCHAR2(5) := 'FALSE';
-      
-      CURSOR get_inv_headers(identity_       VARCHAR2,
-                             company_        VARCHAR2) IS
-         SELECT invoice_id
-           FROM OUTGOING_INVOICE_QRY
-          WHERE identity = identity_
-            AND company LIKE NVL(company_,'%');
-   
+        
       CURSOR get_inv_header_notes(in_company_    VARCHAR2, in_identity_ VARCHAR2, in_invoice_id_ NUMBER) is
-         SELECT *
-           FROM (SELECT Credit_Note_Status_API.Get_Note_Status_Description(COMPANY, NOTE_STATUS_ID)
+         SELECT  1 
                    FROM invoice_header_notes 
                   WHERE company = in_company_
                     AND identity = in_identity_
                     AND party_type = 'Customer'
                     AND invoice_id = in_invoice_id_
-                  ORDER BY note_date DESC, note_id DESC)
-          WHERE ROWNUM = 1;
+                    AND Credit_Note_Status_API.Get_Note_Status_Description(company, note_status_id) ='Large Invoice Call' ;
    
    BEGIN
-   
-      FOR rec_ in get_inv_headers(identity_, company_) LOOP
-         OPEN get_inv_header_notes(company_,identity_,rec_.invoice_id);
+
+         OPEN get_inv_header_notes(company_,identity_,invoice_id_);
          FETCH get_inv_header_notes
-          INTO status_;
+          INTO larg_call_;
          CLOSE get_inv_header_notes;
 
-         IF (status_ IN ('Large Invoice Call') ) THEN
-            temp_ := 'TRUE';
-            EXIT;
-         END IF;
-      END LOOP;
+      IF(larg_call_ IS NOT NULL AND larg_call_ =1)THEN 
+         temp_ := 'TRUE';
+      END IF;
       RETURN temp_;
    END Check_Inv_Courtesy_Call; 
    
@@ -4225,5 +4212,32 @@ BEGIN
    
 END Get_Non_Value_Added_Work;
 -- C458 EntMahesR (END)
+
+-- 210727 EntDinusK C706 (START)
+FUNCTION Get_Next_Id_Equip (
+   sup_mch_code_ equipment_object_tab.sup_mch_code%TYPE,
+   obj_level_    equipment_object_tab.obj_level%TYPE
+   ) RETURN VARCHAR2
+IS
+   next_object_ equipment_object_tab.mch_code%TYPE;
+   CURSOR get_max_object IS
+      SELECT CASE
+         WHEN sup_mch_code_ IN (SELECT eo.mch_code FROM equipment_object eo WHERE eo.obj_level IN ('210_MS_CONTRACT', '200_CONTRACT')) AND obj_level_ IN ('355_DWELLING', '340_SCHEME') THEN 
+          (SELECT sup_mch_code_ || '_' || to_char(max(to_number(substr(ef.mch_code,instr(ef.mch_code, '_', -1) + 1))) + 1) FROM equipment_functional_uiv ef WHERE ef.obj_level = obj_level_ AND ef.sup_mch_code = sup_mch_code_)
+         ELSE
+          ''
+         END next_object
+      FROM dual;
+BEGIN
+	OPEN get_max_object;
+   FETCH get_max_object INTO next_object_;
+   CLOSE get_max_object;
+   RETURN next_object_;
+EXCEPTION 
+   WHEN OTHERS THEN
+      next_object_ := '';
+	   RETURN next_object_;
+END Get_Next_Id_Equip;
+-- 210727 EntDinusK C706 (END)
 
 -------------------- LU  NEW METHODS -------------------------------------
