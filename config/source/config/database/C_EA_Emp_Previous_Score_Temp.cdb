@@ -1,0 +1,30 @@
+-----------------------------------------------------------------------------
+--  Module : CONFIG
+--
+--  File   : C_EA_Emp_Previous_Score_Temp.cdb
+--
+--  IFS Developer Studio Template Version 2.6
+--
+--  Date     Sign        History
+--  ------   ----------  --------------------------------------------------
+--  210730   EntMaheshR  Created
+--  ------   ----------  --------------------------------------------------
+-----------------------------------------------------------------------------
+
+SET SERVEROUTPUT ON
+EXEC Installation_SYS.Log_Detail_Time_Stamp('CONFIG', 'C_EA_Emp_Previous_Score_Temp.cdb', 'Timestamp_1');
+PROMPT Create global temporary table to store employee score for the previous  period.
+
+DECLARE 
+   table_name_    VARCHAR2(30) := 'EMP_PREVIOUS_SCORE_TMP';   
+   columns_       Installation_SYS.ColumnTabType;    
+BEGIN    
+   Database_SYS.Set_Table_Column(columns_, 'EMP_NO', 'VARCHAR2(11)', 'N');
+   Database_SYS.Set_Table_Column(columns_, 'SCORE',  'NUMBER', 'N');
+   Database_SYS.Create_Temporary_Table(table_name_, columns_, TRUE);  
+END;
+/
+
+EXEC Installation_SYS.Log_Detail_Time_Stamp('CONFIG', 'C_EA_Emp_Previous_Score_Temp.cdb', 'Done');
+SET SERVEROUTPUT OFF
+
