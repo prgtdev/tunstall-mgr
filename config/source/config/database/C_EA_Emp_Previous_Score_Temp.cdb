@@ -6,22 +6,29 @@
 --  IFS Developer Studio Template Version 2.6
 --
 --  Date     Sign        History
---  ------   ----------  --------------------------------------------------
---  210730   EntMaheshR  Created
---  ------   ----------  --------------------------------------------------
------------------------------------------------------------------------------
+--  ------   ----------  -----------------------------------------------------------------------------------------
+--  210730   EntMaheshR  Creating temporary tables EMP_CURRENT_SCORE_TMP and EMP_PREVIOUS_SCORE_TMP
+--                       in order to use in the rank calculation logic of the employess.
+--  ------   ----------  -----------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------
 
 SET SERVEROUTPUT ON
 EXEC Installation_SYS.Log_Detail_Time_Stamp('CONFIG', 'C_EA_Emp_Previous_Score_Temp.cdb', 'Timestamp_1');
-PROMPT Create global temporary table to store employee score for the previous  period.
+PROMPT Create global temporary tables EMP_CURRENT_SCORE_TMP AND EMP_PREVIOUS_SCORE_TMP to store employee score for the current period and previous  period.
 
 DECLARE 
-   table_name_    VARCHAR2(30) := 'EMP_PREVIOUS_SCORE_TMP';   
-   columns_       Installation_SYS.ColumnTabType;    
+   table_name1_    VARCHAR2(30) := 'EMP_CURRENT_SCORE_TMP'; 
+   table_name2_    VARCHAR2(30) := 'EMP_PREVIOUS_SCORE_TMP';   
+   columns1_       Installation_SYS.ColumnTabType;  
+   columns2_       Installation_SYS.ColumnTabType;   
 BEGIN    
-   Database_SYS.Set_Table_Column(columns_, 'EMP_NO', 'VARCHAR2(11)', 'N');
-   Database_SYS.Set_Table_Column(columns_, 'SCORE',  'NUMBER', 'N');
-   Database_SYS.Create_Temporary_Table(table_name_, columns_, TRUE);  
+   Database_SYS.Set_Table_Column(columns1_, 'EMP_NO', 'VARCHAR2(11)', 'N');
+   Database_SYS.Set_Table_Column(columns1_, 'SCORE',  'NUMBER', 'N');
+   Database_SYS.Create_Temporary_Table(table_name1_, columns1_, TRUE);
+   
+   Database_SYS.Set_Table_Column(columns2_, 'EMP_NO', 'VARCHAR2(11)', 'N');
+   Database_SYS.Set_Table_Column(columns2_, 'SCORE',  'NUMBER', 'N');
+   Database_SYS.Create_Temporary_Table(table_name2_, columns2_, TRUE);  
 END;
 /
 
