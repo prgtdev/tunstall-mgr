@@ -4223,7 +4223,9 @@ FUNCTION Get_Previous_Rank(
    company_    VARCHAR2,
    start_date_ IN DATE,
    end_date_   IN DATE) RETURN NUMBER
-IS    
+IS   
+   PRAGMA  AUTONOMOUS_TRANSACTION; 
+   
    no_of_days_ NUMBER;    
    previous_start_date_ DATE;
    previous_end_date_ DATE;
@@ -4277,8 +4279,9 @@ BEGIN
          rank_ := rec_.rank;
          EXIT;
       END IF;
-   END LOOP;    
-      
+   END LOOP; 
+   @ApproveTransactionStatement(2021-07-30, EntMahesR)   
+   COMMIT;   
    RETURN rank_;
    
 END Get_Previous_Rank;
