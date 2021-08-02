@@ -3799,8 +3799,8 @@ END Get_Total_Charge_Cost;
 FUNCTION Get_SLA (
    emp_no_     VARCHAR2,
    company_    VARCHAR2,
-   start_date_ IN DATE,
-   end_date_   IN DATE) RETURN NUMBER
+   start_date_ DATE,
+   end_date_   DATE) RETURN NUMBER
 IS
    resource_seq_ NUMBER;
    sla_met_task_count_ NUMBER := 0;
@@ -3848,8 +3848,8 @@ END Get_SLA;
 FUNCTION Get_First_Fix (
    emp_no_     VARCHAR2,
    company_    VARCHAR2,
-   start_date_ IN DATE,
-   end_date_   IN DATE) RETURN NUMBER   
+   start_date_ DATE,
+   end_date_   DATE) RETURN NUMBER   
 IS
    resource_seq_ NUMBER; 
    first_fix_one_task_ass_count_ NUMBER := 0;
@@ -3935,8 +3935,8 @@ END Get_First_Fix;
 FUNCTION Get_NPS(
    emp_no_     VARCHAR2,
    company_    VARCHAR2,
-   start_date_ IN DATE,
-   end_date_   IN DATE) RETURN NUMBER
+   start_date_ DATE,
+   end_date_   DATE) RETURN NUMBER
 IS
    nps_ NUMBER;
    CURSOR get_nps IS      
@@ -3963,8 +3963,8 @@ END Get_NPS;
 FUNCTION Get_No_Access(
    emp_no_     VARCHAR2,
    company_    VARCHAR2,
-   start_date_ IN DATE,
-   end_date_   IN DATE) RETURN NUMBER
+   start_date_ DATE,
+   end_date_   DATE) RETURN NUMBER
 IS
    resource_seq_ NUMBER; 
    no_access_wo_count_ NUMBER := 0;
@@ -4012,8 +4012,8 @@ END Get_No_Access;
 FUNCTION Get_Value_Added_Work(
    emp_no_     VARCHAR2,
    company_    VARCHAR2,
-   start_date_ IN DATE,
-   end_date_   IN DATE) RETURN NUMBER
+   start_date_ DATE,
+   end_date_   DATE) RETURN NUMBER
 IS
    total_wo_and_travel_time_ NUMBER := 0;
    total_shift_time_ NUMBER := 0;
@@ -4070,8 +4070,8 @@ END Get_Value_Added_Work;
 FUNCTION Get_Total_Non_Wo_Travel___(  
    emp_no_     VARCHAR2,
    company_    VARCHAR2,
-   start_date_ IN DATE,
-   end_date_   IN DATE) RETURN NUMBER
+   start_date_ DATE,
+   end_date_   DATE) RETURN NUMBER
 IS
    total_non_work_order_travel_ NUMBER := 0; 
    question_2_answer_ DATE;
@@ -4106,8 +4106,8 @@ END Get_Total_Non_Wo_Travel___;
 FUNCTION Get_Total_Non_Wo_Time___ (  
    emp_no_     VARCHAR2,
    company_    VARCHAR2,
-   start_date_ IN DATE,
-   end_date_   IN DATE) RETURN NUMBER
+   start_date_ DATE,
+   end_date_   DATE) RETURN NUMBER
 IS
    total_non_work_order_time_ NUMBER := 0; 
    question_2_answer_ DATE;
@@ -4141,8 +4141,8 @@ END Get_Total_Non_Wo_Time___;
 FUNCTION Get_Non_Value_Added_Work(
    emp_no_     VARCHAR2,
    company_    VARCHAR2,
-   start_date_ IN DATE,
-   end_date_   IN DATE) RETURN NUMBER
+   start_date_ DATE,
+   end_date_   DATE) RETURN NUMBER
 IS
    total_daily_vec_chk_q5_ NUMBER;
    total_mon_vec_chk_q14_ NUMBER;
@@ -4221,8 +4221,8 @@ END Get_Non_Value_Added_Work;
 FUNCTION Get_Current_Rank(
    emp_no_     VARCHAR2,
    company_    VARCHAR2,
-   start_date_ IN DATE,
-   end_date_   IN DATE) RETURN NUMBER
+   start_date_ DATE,
+   end_date_   DATE) RETURN NUMBER
 IS   
    PRAGMA  AUTONOMOUS_TRANSACTION;    
        
@@ -4285,8 +4285,8 @@ END Get_Current_Rank;
 FUNCTION Get_Previous_Score(
    emp_no_     VARCHAR2,
    company_    VARCHAR2,
-   start_date_ IN DATE,
-   end_date_   IN DATE) RETURN NUMBER
+   start_date_ DATE,
+   end_date_   DATE) RETURN NUMBER
 IS
    no_of_days_ NUMBER;
    previous_start_date_ DATE;
@@ -4323,8 +4323,8 @@ END Get_Previous_Score;
 FUNCTION Get_Previous_Rank(
    emp_no_     VARCHAR2,
    company_    VARCHAR2,
-   start_date_ IN DATE,
-   end_date_   IN DATE) RETURN NUMBER
+   start_date_ DATE,
+   end_date_   DATE) RETURN NUMBER
 IS   
    PRAGMA  AUTONOMOUS_TRANSACTION; 
    
