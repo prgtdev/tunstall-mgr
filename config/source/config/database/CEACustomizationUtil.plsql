@@ -4402,7 +4402,7 @@ IS
    
    CURSOR get_org_employees IS
       SELECT me.emp_no 
-      FROM ifsapp.maint_empolyee_uiv me, ifsapp.maint_person_employee mpe
+      FROM maint_empolyee_uiv me, maint_person_employee mpe
       WHERE me.org_code = org_code_
       AND me.emp_no = mpe.emp_no
       AND me.resource_seq = mpe.resource_seq;
@@ -4425,7 +4425,7 @@ IS
    
    CURSOR get_org_employees IS
       SELECT me.emp_no 
-      FROM ifsapp.maint_empolyee_uiv me, ifsapp.maint_person_employee mpe
+      FROM maint_empolyee_uiv me, maint_person_employee mpe
       WHERE me.org_code = org_code_
       AND me.emp_no = mpe.emp_no
       AND me.resource_seq = mpe.resource_seq;
@@ -4448,7 +4448,7 @@ IS
    
    CURSOR get_org_employees IS
       SELECT me.emp_no 
-      FROM ifsapp.maint_empolyee_uiv me, ifsapp.maint_person_employee mpe
+      FROM maint_empolyee_uiv me, maint_person_employee mpe
       WHERE me.org_code = org_code_
       AND me.emp_no = mpe.emp_no
       AND me.resource_seq = mpe.resource_seq;
@@ -4471,7 +4471,7 @@ IS
    
    CURSOR get_org_employees IS
       SELECT me.emp_no 
-      FROM ifsapp.maint_empolyee_uiv me, ifsapp.maint_person_employee mpe
+      FROM maint_empolyee_uiv me, maint_person_employee mpe
       WHERE me.org_code = org_code_
       AND me.emp_no = mpe.emp_no
       AND me.resource_seq = mpe.resource_seq;
@@ -4494,7 +4494,7 @@ IS
    
    CURSOR get_org_employees IS
       SELECT me.emp_no 
-      FROM ifsapp.maint_empolyee_uiv me, ifsapp.maint_person_employee mpe
+      FROM maint_empolyee_uiv me, maint_person_employee mpe
       WHERE me.org_code = org_code_
       AND me.emp_no = mpe.emp_no
       AND me.resource_seq = mpe.resource_seq;
@@ -4517,7 +4517,7 @@ IS
    
    CURSOR get_org_employees IS
       SELECT me.emp_no 
-      FROM ifsapp.maint_empolyee_uiv me, ifsapp.maint_person_employee mpe
+      FROM maint_empolyee_uiv me, maint_person_employee mpe
       WHERE me.org_code = org_code_
       AND me.emp_no = mpe.emp_no
       AND me.resource_seq = mpe.resource_seq;
