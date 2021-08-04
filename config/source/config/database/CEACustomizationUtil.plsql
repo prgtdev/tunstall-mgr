@@ -4427,34 +4427,6 @@ END Get_Next_Id_Equip;
 -- 210730 EntDinusK C706 (END)
 
 -- C0740 EntChamuA (START)
-FUNCTION Get_Service_Contract_Notes (contract_id_ IN VARCHAR2, 
-                                     line_no_ IN NUMBER) RETURN VARCHAR2
-IS
-   notes_ VARCHAR2(3200);
-   
-    CURSOR get_header_notes(contract_id_ IN VARCHAR2) IS
-    SELECT notes 
-      FROM sc_service_contract
-     WHERE contract_id = contract_id_;
-
-    CURSOR get_line_notes(contract_id_ IN VARCHAR2, line_no_ IN NUMBER) IS
-    SELECT note
-      FROM psc_contr_product_uiv
-     WHERE contract_id = contract_id_
-       AND line_no = line_no_;
-BEGIN
-   -- Get notes of service contract header
-   FOR rec IN get_header_notes(contract_id_) LOOP
-      notes_ := rec.notes ||chr(13)||chr(10)|| notes_;
-   END LOOP;
-   -- Get notes of service contract line
-   FOR rec_ IN get_line_notes(contract_id_, line_no_) LOOP
-      notes_ := rec_.note ||chr(13)||chr(10)|| notes_;
-   END LOOP;
-   
-   RETURN notes_;
-END Get_Service_Contract_Notes;
-
 FUNCTION Get_Service_Contract_Notes_WO (wo_no_ IN NUMBER,
                                         contract_id_ IN VARCHAR2, 
                                         line_no_ IN NUMBER) RETURN VARCHAR2
