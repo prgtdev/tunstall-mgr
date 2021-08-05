@@ -4870,11 +4870,13 @@ IS
   objversion_ VARCHAR2(100);
   attr_       VARCHAR2(3200);
   info_       VARCHAR2(3200);
+  date_       TIMESTAMP;
 
 BEGIN
   IF(LENGTH(free_text_) > 2) THEN
-    Doc_Dist_List_History_Api.Get_Id_Version_By_Keys(doc_class_, doc_no_, doc_sheet_, doc_rev_, objid_, objversion_, receiver_person_, TO_DATE(date_logged_, 'MM/DD/YYYY HH:MI:SS AM'));
-    Doc_Dist_List_History_Api.Approve__( info_ ,  objid_ , objversion_ , attr_ , 'DO' );
+     SELECT to_timestamp(date_logged_, 'yyyy-MM-dd"T"hh24:mi:ss"Z"') INTO date_ FROM DUAL ;
+     Doc_Dist_List_History_Api.Get_Id_Version_By_Keys(doc_class_, doc_no_, doc_sheet_, doc_rev_, objid_, objversion_, receiver_person_, date_ );
+     Doc_Dist_List_History_Api.Approve__( info_ ,  objid_ , objversion_ , attr_ , 'DO' );
   ELSE
     Error_Sys.Record_General('Error', 'Please enter your name and then click the Sign Document button');
   END IF;
