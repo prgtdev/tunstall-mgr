@@ -4856,4 +4856,28 @@ BEGIN
 END Get_Service_Contract_Notes_WO;
 -- C0740 EntChamuA (END)
 
+-- C0678 EntDarshP (START)
+PROCEDURE Approve_Incoming_Docs(
+  receiver_person_ IN VARCHAR2,
+  date_logged_     IN VARCHAR2,
+  doc_class_       IN VARCHAR2,
+  doc_no_          IN VARCHAR2,
+  doc_rev_         IN VARCHAR2,
+  doc_sheet_       IN VARCHAR2,
+  free_text_       IN VARCHAR2)
+IS
+  objid_      VARCHAR2(100);
+  objversion_ VARCHAR2(100);
+  attr_       VARCHAR2(3200);
+  info_       VARCHAR2(3200);
+
+BEGIN
+  IF(LENGTH(free_text_) > 2) THEN
+    Doc_Dist_List_History_Api.Get_Id_Version_By_Keys(doc_class_, doc_no_, doc_sheet_, doc_rev_, objid_, objversion_, receiver_person_, TO_DATE(date_logged_, 'MM/DD/YYYY HH:MI:SS AM'));
+    Doc_Dist_List_History_Api.Approve__( info_ ,  objid_ , objversion_ , attr_ , 'DO' );
+  ELSE
+    Error_Sys.Record_General('Error', 'Please enter your name and then click the Sign Document button');
+  END IF;
+END Approve_Incoming_Docs;
+-- C0678 EntDarshP (FINISH)
 -------------------- LU  NEW METHODS -------------------------------------
