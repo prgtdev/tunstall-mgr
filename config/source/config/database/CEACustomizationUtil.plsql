@@ -4660,8 +4660,7 @@ BEGIN
    FOR rec_ IN get_organizations LOOP      
       nps_ := Get_Regional_NPS(rec_.org_code, company_, start_date_, end_date_);      
       
-      -- If anyone of employees has no surveys completed during time period, disregard that figure and 
-      -- do the calculation using other employees figures
+      -- if there are no surveys satisfying the requirement(ie value gets 999) no need to consider for overall score calculation
       IF (nps_ != 999) THEN
          sla_ := Get_Regional_SLA (rec_.org_code, company_, start_date_, end_date_);
          first_fix_ := Get_Regional_First_Fix (rec_.org_code, company_, start_date_, end_date_); 
