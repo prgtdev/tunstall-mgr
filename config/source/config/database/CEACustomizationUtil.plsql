@@ -1168,7 +1168,7 @@ IS
       FROM JT_TASK_SALES_LINE_UIV 
      WHERE wo_no = wo_no_
        AND company = company_
-       AND state='Invoiceable';
+       AND state NOT IN ('NotInvoiceable');
        
 BEGIN
    
@@ -1179,17 +1179,17 @@ BEGIN
     IF (NVL(ready_to_invoice_,'FALSE') ='FALSE')THEN
          OPEN get_sales_line_info;
          FETCH get_sales_line_info INTO dummy_;
-        IF(get_sales_line_info%NOTFOUND)THEN
-           RETURN 'TRUE';
+        IF(get_sales_line_info%FOUND)THEN
+           RETURN 'FALSE';
         ELSE
            CLOSE get_sales_line_info;
-           RETURN 'FALSE';
+           RETURN 'TRUE';
         END IF;
     ELSE
         RETURN 'FALSE';
     END IF;    
    
-END Check_Non_Chergeable;
+ END Check_Non_Chergeable;
 
 FUNCTION Check_Cause_Discount(
    wo_no_   IN NUMBER,
@@ -1337,7 +1337,7 @@ IS
        (SELECT service_invoice_id
            FROM JT_TASK_SALES_LINE_UIV
           WHERE ((task_seq IN (SELECT task_seq
-                                 FROM IFSAPP.JT_TASK_UIV
+                                 FROM JT_TASK_UIV
                                 WHERE wo_no = wo_no_)) OR
                 ((task_seq IS NULL AND wo_no = wo_no_) AND
                 (COST_TYPE_DB = 'FIXED_QUOTATION')))));
