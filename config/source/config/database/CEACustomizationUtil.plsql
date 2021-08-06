@@ -4541,18 +4541,21 @@ IS
 BEGIN
    FOR rec_ IN get_org_employees LOOP
       individual_nps_ := Get_NPS(rec_.emp_no, company_, start_date_, end_date_);
-      -- If anyone of employees has no surveys completed during time period will exit from the calculation and return 999   
-      -- instead, which is not a real value in this scenario, later this figure will show as 'No Data' in the crystal layout
+      -- If anyone of employees has no surveys completed during time period, disregard that figure and 
+      -- do the calculation using other employees figures
       IF (individual_nps_ = 999) THEN
-         return_value_ := 999;
-         EXIT;
+         return_value_ := 999;         
       ELSE
          sum_nps_ :=  sum_nps_ + individual_nps_;
          count_ := count_ + 1;
-      END IF; 
+      END IF;       
+   END LOOP;
+   IF (return_value_ = 999) THEN
+      RETURN return_value_;   
+   ELSE
       RETURN ROUND(sum_nps_/count_);
-   END LOOP;   
-   RETURN return_value_;
+   END IF;   
+   
 END Get_Regional_NPS;
 
 FUNCTION Get_Regional_No_Access(
@@ -4657,7 +4660,8 @@ BEGIN
    FOR rec_ IN get_organizations LOOP      
       nps_ := Get_Regional_NPS(rec_.org_code, company_, start_date_, end_date_);      
       
-      -- if there are no surveys satisfying the requirement(ie value gets 999) no need to consider for overall score calculation
+      -- If anyone of employees has no surveys completed during time period, disregard that figure and 
+      -- do the calculation using other employees figures
       IF (nps_ != 999) THEN
          sla_ := Get_Regional_SLA (rec_.org_code, company_, start_date_, end_date_);
          first_fix_ := Get_Regional_First_Fix (rec_.org_code, company_, start_date_, end_date_); 
@@ -4823,18 +4827,20 @@ IS
 BEGIN
    FOR rec_ IN get_company_employees LOOP
       individual_nps_ := Get_NPS(rec_.emp_no, company_, start_date_, end_date_);
-      -- If anyone of employees has no surveys completed during time period will exit from the calculation and return 999   
-      -- instead, which is not a real value in this scenario, later this figure will show as 'No Data' in the crystal report
+      -- If anyone of employees has no surveys completed during time period, disregard that figure and 
+      -- do the calculation using other employees figures
       IF (individual_nps_ = 999) THEN
-         return_value_ := 999;
-         EXIT;
+         return_value_ := 999;         
       ELSE
          sum_nps_ :=  sum_nps_ + individual_nps_;
          count_ := count_ + 1;
-      END IF; 
+      END IF;     
+   END LOOP; 
+   IF (return_value_ = 999) THEN
+      RETURN return_value_;      
+   ELSE
       RETURN ROUND(sum_nps_/count_);
-   END LOOP;   
-   RETURN return_value_;
+   END IF;    
 END Get_Company_NPS;
 
 FUNCTION Get_Company_No_Access(   
