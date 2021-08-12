@@ -142,6 +142,14 @@
          <DISPLAY_TEXT>No Of Copies 3:</DISPLAY_TEXT>
          <VALUE/>
       </NO_OF_COPIES3>
+      <PRINT_APP_LABEL>
+         <DISPLAY_TEXT>Print App Label:</DISPLAY_TEXT>
+         <VALUE/>
+      </PRINT_APP_LABEL>
+      <PRINT_CONS_LABEL>
+         <DISPLAY_TEXT>Print Cons Label:</DISPLAY_TEXT>
+         <VALUE/>
+      </PRINT_CONS_LABEL>
    </APPROVED_LABEL_REP_DATA_ASSEMBLY_PARAMETERS>
    <APPROVED_LABEL_REP_ARCHIVE_VARIABLES/>
    <APPROVED_LABEL_REP_TRANSLATIONS>
@@ -158,9 +166,12 @@
                <RECEIVER>Receiver:</RECEIVER>
                <OWNERSHIP>Ownership:</OWNERSHIP>
                <SERIAL_NO>Serial No:</SERIAL_NO>
+               <W_D_R_NO>W D R No:</W_D_R_NO>
                <EXPIRATION_DATE>Expiration Date:</EXPIRATION_DATE>
                <RECEIPT_DATE>Receipt Date:</RECEIPT_DATE>
                <DEFAULT_LOCATION_NO>Default Location No:</DEFAULT_LOCATION_NO>
+               <PRINT_APP_LABEL>Print App Label:</PRINT_APP_LABEL>
+               <PRINT_CONS_LABEL>Print Cons Label:</PRINT_CONS_LABEL>
             </DETAIL>
          </ITEMS>
       </ATTRIBUTE_DISPLAY_TEXTS>
@@ -175,9 +186,12 @@
             <RECEIVER>ABC</RECEIVER>
             <OWNERSHIP>ABC</OWNERSHIP>
             <SERIAL_NO>ABC</SERIAL_NO>
+            <W_D_R_NO>ABC</W_D_R_NO>
             <EXPIRATION_DATE>2009-01-01</EXPIRATION_DATE>
             <RECEIPT_DATE>2009-01-01</RECEIPT_DATE>
             <DEFAULT_LOCATION_NO>ABC</DEFAULT_LOCATION_NO>
+            <PRINT_APP_LABEL>ABC</PRINT_APP_LABEL>
+            <PRINT_CONS_LABEL>ABC</PRINT_CONS_LABEL>
          </DETAIL>
          <DETAIL>
             <PART_NO>ABC</PART_NO>
@@ -187,9 +201,12 @@
             <RECEIVER>ABC</RECEIVER>
             <OWNERSHIP>ABC</OWNERSHIP>
             <SERIAL_NO>ABC</SERIAL_NO>
+            <W_D_R_NO>ABC</W_D_R_NO>
             <EXPIRATION_DATE>2009-01-01</EXPIRATION_DATE>
             <RECEIPT_DATE>2009-01-01</RECEIPT_DATE>
             <DEFAULT_LOCATION_NO>ABC</DEFAULT_LOCATION_NO>
+            <PRINT_APP_LABEL>ABC</PRINT_APP_LABEL>
+            <PRINT_CONS_LABEL>ABC</PRINT_CONS_LABEL>
          </DETAIL>
       </ITEMS>
    </APPROVED_LABEL_REP>
