@@ -1965,14 +1965,14 @@ BEGIN
          EXIT;
       END IF; 
       
-      OPEN  get_aging_bucket(rec_.company, rec_.invoice_id);
+      /*OPEN  get_aging_bucket(rec_.company, rec_.invoice_id);
       FETCH  get_aging_bucket INTO  current_bucket_;
       CLOSE get_aging_bucket;
       
       IF(status_ NOT IN ('Complete','Escalated to Credit Manager','Escalated to Finance Controller') AND current_bucket_ IS NOT NULL)THEN
          temp_ := 'TRUE';
          EXIT;
-      END IF;
+      END IF;*/
    END LOOP;
    RETURN temp_;
 END Check_Inv_Header_CA;
@@ -2438,7 +2438,44 @@ BEGIN
          END IF;
          
          RETURN out_;
-   END  Check_Note_Latest; 
+      END  Check_Note_Latest;
+   
+   FUNCTION Check_Cr_Note_Complete(company_ IN VARCHAR2,
+                                       identity_ IN VARCHAR2, 
+                                       invoice_id_ IN NUMBER,
+                                       note_id_ IN NUMBER)RETURN VARCHAR2
+      IS
+         dummy_ NUMBER;
+         out_ VARCHAR2(5) :='FALSE';
+         
+         CURSOR get_complete_note IS
+         SELECT max(note_id)
+           FROM invoice_header_notes
+          WHERE company = company_ 
+            AND identity = identity_
+            AND invoice_id = invoice_id_
+            AND party_type = 'Customer' 
+            AND Credit_Note_Status_API.Get_Note_Status_Description(company,note_status_id) = 'Complete';
+            
+      BEGIN
+         OPEN get_complete_note;
+         FETCH get_complete_note INTO dummy_;
+         IF(get_complete_note%FOUND)THEN
+            IF(note_id_ <= dummy_)THEN 
+               out_ := 'TRUE';
+            ELSE
+               out_ :='FALSE';
+            END IF;
+            
+         ELSE
+            CLOSE get_complete_note;
+            out_ :='FALSE';
+         END IF;
+         
+         RETURN out_;
+      END Check_Cr_Note_Complete;
+      
+      
 --C0367 EntChathI (END)
 --C0368 EntChathI (START)
 FUNCTION Check_Credit_Note_Queries_CM(
@@ -2588,7 +2625,7 @@ IS
    status_ VARCHAR2(100);
    inv_state_ VARCHAR2(100);
    inv_due_ DATE;
-   balance_ NUMBER;
+   amount_due_ NUMBER;
    credit_note_ NUMBER;
    current_bucket_ NUMBER;
    
@@ -2623,7 +2660,7 @@ IS
 
 
    CURSOR get_acount_due(company_ VARCHAR2, identity_ VARCHAR2)IS
-      SELECT  balance
+      SELECT  amount_due
       FROM identity_pay_info_cu_qry
       where company = company_
       AND identity = identity_;
@@ -2655,15 +2692,10 @@ BEGIN
       END IF;      
 
       OPEN  get_acount_due(rec_.company, rec_.identity);
-      FETCH  get_acount_due INTO  balance_;
-      CLOSE get_acount_due;
-      
-      OPEN  get_aging_bucket(rec_.company, rec_.invoice_id);
-      FETCH  get_aging_bucket INTO  current_bucket_;
-      CLOSE get_aging_bucket;
-      
+      FETCH  get_acount_due INTO  amount_due_;
+      CLOSE get_acount_due;  
 
-      IF(credit_note_ IS NULL AND current_bucket_ IS NULL)THEN 
+      IF(credit_note_ IS NULL AND amount_due_>0)THEN 
          temp_ := 'TRUE';
          EXIT;
       END IF; 
