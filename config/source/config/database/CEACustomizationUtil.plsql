@@ -3669,16 +3669,15 @@ FUNCTION Get_Stock_Available_Per_Site (
 IS 
    total_qty_available_  NUMBER;
    CURSOR get_available_total IS  
-      SELECT SUM(qty_onhand - qty_reserved)
+      SELECT SUM(NVL((qty_onhand - qty_reserved),0))  
       FROM inventory_part_in_stock_uiv
       WHERE contract = contract_
-      AND part_no = part_no_
-      GROUP BY contract, part_no; 
+      AND part_no = part_no_; 
 BEGIN   
    OPEN get_available_total;
    FETCH get_available_total INTO total_qty_available_;
    CLOSE get_available_total;    
-   RETURN total_qty_available_;    
+   RETURN NVL(total_qty_available_, 0);    
 END Get_Stock_Available_Per_Site;
 
 -- Note that here contract 2011 has hardcoded because it is the only manufacturing site
@@ -3689,7 +3688,7 @@ FUNCTION Get_Total_Mrp_Demand (
 IS 
    mrp_total_demand_  NUMBER;
    CURSOR get_mrp_total_demand IS  
-      SELECT SUM(projected_onhand)
+      SELECT SUM(demand_qty) 
       FROM mrp_part_supply_demand_all     
       WHERE contract = '2011'
       AND part_no = part_no_
@@ -3698,7 +3697,7 @@ BEGIN
    OPEN get_mrp_total_demand;
    FETCH get_mrp_total_demand INTO mrp_total_demand_;
    CLOSE get_mrp_total_demand; 
-   RETURN mrp_total_demand_;     
+   RETURN NVL(mrp_total_demand_, 0);     
 END Get_Total_Mrp_Demand;
 
 -- Note that here contract 2011 has hardcoded because it is the only manufacturing site
@@ -3714,7 +3713,7 @@ IS
    no_of_structures_           NUMBER;
    count_                      NUMBER := 0;
    CURSOR get_mrp_specific_total_demand(part_no_ VARCHAR2, parent_part_no_ VARCHAR2) IS  
-      SELECT SUM(projected_onhand)
+      SELECT SUM(demand_qty)
       FROM mrp_part_supply_demand_all     
       WHERE contract = '2011'
       AND part_no = part_no_
@@ -3742,7 +3741,7 @@ IS
    -- Note that here mrp_source_db '1' represents Cust Order entries and 
    -- mrp_source_db '27' represents Distribution Order entries 
    CURSOR get_mrp_total_sales_demand IS  
-      SELECT SUM(projected_onhand)
+      SELECT SUM(demand_qty)
       FROM mrp_part_supply_demand_all     
       WHERE contract = '2011'
       AND part_no = part_no_
@@ -3752,9 +3751,48 @@ BEGIN
    OPEN get_mrp_total_sales_demand;
    FETCH get_mrp_total_sales_demand INTO mrp_total_sales_demand_;
    CLOSE get_mrp_total_sales_demand; 
-   RETURN mrp_total_sales_demand_;     
+   RETURN NVL(mrp_total_sales_demand_, 0);     
 END Get_Total_Sales_Mrp_Demand;
 
+-- Note that here contract 2011 has hardcoded because it is the only manufacturing site
+-- and this will be mentioned in delivery notes as well
+FUNCTION Get_Bom_Count (
+   part_no_         IN VARCHAR2,
+   required_date_   IN DATE ) RETURN NUMBER
+IS
+   bom_count_ NUMBER;   
+   CURSOR get_bom_count IS  
+      SELECT COUNT(*)
+      FROM manuf_structure
+      WHERE contract = '2011'
+      AND component_part = part_no_
+      AND Prod_Struct_Alternate_API.Get_State_Db('2011', part_no, eng_chg_level, 'M', '*' ) = 'Buildable'
+      AND required_date_ > eff_phase_in_date 
+      AND ((required_date_ < eff_phase_out_date) OR (eff_phase_out_date IS NULL)); 
+BEGIN
+   OPEN get_bom_count;
+   FETCH get_bom_count INTO bom_count_;
+   CLOSE get_bom_count;
+   RETURN NVL(bom_count_, 0);
+END  Get_Bom_Count; 
+
+-- Note that here contract 2011 has hardcoded because it is the only manufacturing site
+-- and this will be mentioned in delivery notes as well
+FUNCTION Get_Std_Cost (
+   part_no_         IN VARCHAR2) RETURN NUMBER
+IS
+   std_cost_ NUMBER;   
+   CURSOR get_std_cost IS  
+      SELECT SUM(Inventory_Part_Unit_Cost_API.Get_Inventory_Value_By_Method(contract,part_no,configuration_id,lot_batch_no,serial_no)) 
+      FROM inventory_part_unit_cost_sum
+      WHERE part_no = part_no_
+      AND contract = '2011';
+BEGIN
+   OPEN get_std_cost;
+   FETCH get_std_cost INTO std_cost_;
+   CLOSE get_std_cost;
+   RETURN std_cost_;
+END  Get_Std_Cost; 
 -- C209 EntMahesR (END)
 
 -- C0321 EntChamuA (START)
