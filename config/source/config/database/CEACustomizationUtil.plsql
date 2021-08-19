@@ -3663,23 +3663,6 @@ BEGIN
    RETURN 1;   
 END Check_Phrase_In_Out_Dates;
 
-FUNCTION Get_Stock_Available_Per_Site (
-   contract_   IN VARCHAR2,
-   part_no_    IN VARCHAR2 ) RETURN NUMBER
-IS 
-   total_qty_available_  NUMBER;
-   CURSOR get_available_total IS  
-      SELECT SUM(NVL((qty_onhand - qty_reserved),0))  
-      FROM inventory_part_in_stock_uiv
-      WHERE contract = contract_
-      AND part_no = part_no_; 
-BEGIN   
-   OPEN get_available_total;
-   FETCH get_available_total INTO total_qty_available_;
-   CLOSE get_available_total;    
-   RETURN NVL(total_qty_available_, 0);    
-END Get_Stock_Available_Per_Site;
-
 -- Note that here contract 2011 has hardcoded because it is the only manufacturing site
 -- and this will be mentioned in delivery notes as well
 FUNCTION Get_Total_Mrp_Demand (
