@@ -3737,6 +3737,25 @@ BEGIN
    RETURN NVL(mrp_total_sales_demand_, 0);     
 END Get_Total_Sales_Mrp_Demand;
 
+-- Get the total MRP requirement for site 2013
+FUNCTION Get_Total_Drp_Demand (
+   part_no_         IN VARCHAR2,
+   required_date_   IN DATE ) RETURN NUMBER
+IS 
+   total_drp_demand_  NUMBER;
+   CURSOR get_drp_total_demand IS  
+      SELECT SUM(demand_qty) 
+      FROM mrp_part_supply_demand_all     
+      WHERE contract = '2013'
+      AND part_no = part_no_
+      AND required_date BETWEEN TRUNC(SYSDATE) AND required_date_;      
+BEGIN   
+   OPEN get_drp_total_demand;
+   FETCH get_drp_total_demand INTO total_drp_demand_;
+   CLOSE get_drp_total_demand; 
+   RETURN NVL(total_drp_demand_, 0);     
+END Get_Total_Drp_Demand;
+
 -- Note that here contract 2011 has hardcoded because it is the only manufacturing site
 -- and this will be mentioned in delivery notes as well
 FUNCTION Get_Bom_Count (
