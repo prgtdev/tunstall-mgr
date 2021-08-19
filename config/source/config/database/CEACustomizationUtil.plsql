@@ -3688,7 +3688,7 @@ FUNCTION Get_Total_Mrp_Demand (
 IS 
    mrp_total_demand_  NUMBER;
    CURSOR get_mrp_total_demand IS  
-      SELECT SUM(projected_onhand)
+      SELECT SUM(demand_qty) 
       FROM mrp_part_supply_demand_all     
       WHERE contract = '2011'
       AND part_no = part_no_
@@ -3697,7 +3697,7 @@ BEGIN
    OPEN get_mrp_total_demand;
    FETCH get_mrp_total_demand INTO mrp_total_demand_;
    CLOSE get_mrp_total_demand; 
-   RETURN mrp_total_demand_;     
+   RETURN NVL(mrp_total_demand_, 0);     
 END Get_Total_Mrp_Demand;
 
 -- Note that here contract 2011 has hardcoded because it is the only manufacturing site
@@ -3713,7 +3713,7 @@ IS
    no_of_structures_           NUMBER;
    count_                      NUMBER := 0;
    CURSOR get_mrp_specific_total_demand(part_no_ VARCHAR2, parent_part_no_ VARCHAR2) IS  
-      SELECT SUM(projected_onhand)
+      SELECT SUM(demand_qty)
       FROM mrp_part_supply_demand_all     
       WHERE contract = '2011'
       AND part_no = part_no_
@@ -3741,7 +3741,7 @@ IS
    -- Note that here mrp_source_db '1' represents Cust Order entries and 
    -- mrp_source_db '27' represents Distribution Order entries 
    CURSOR get_mrp_total_sales_demand IS  
-      SELECT SUM(projected_onhand)
+      SELECT SUM(demand_qty)
       FROM mrp_part_supply_demand_all     
       WHERE contract = '2011'
       AND part_no = part_no_
@@ -3751,7 +3751,7 @@ BEGIN
    OPEN get_mrp_total_sales_demand;
    FETCH get_mrp_total_sales_demand INTO mrp_total_sales_demand_;
    CLOSE get_mrp_total_sales_demand; 
-   RETURN mrp_total_sales_demand_;     
+   RETURN NVL(mrp_total_sales_demand_, 0);     
 END Get_Total_Sales_Mrp_Demand;
 
 -- Note that here contract 2011 has hardcoded because it is the only manufacturing site
