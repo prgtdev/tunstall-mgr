@@ -3775,6 +3775,24 @@ BEGIN
    CLOSE get_bom_count;
    RETURN NVL(bom_count_, 0);
 END  Get_Bom_Count; 
+
+-- Note that here contract 2011 has hardcoded because it is the only manufacturing site
+-- and this will be mentioned in delivery notes as well
+FUNCTION Get_Std_Cost (
+   part_no_         IN VARCHAR2) RETURN NUMBER
+IS
+   std_cost_ NUMBER;   
+   CURSOR get_std_cost IS  
+      SELECT SUM(Inventory_Part_Unit_Cost_API.Get_Inventory_Value_By_Method(contract,part_no,configuration_id,lot_batch_no,serial_no)) 
+      FROM inventory_part_unit_cost_sum
+      WHERE part_no = part_no_
+      AND contract = '2011';
+BEGIN
+   OPEN get_std_cost;
+   FETCH get_std_cost INTO std_cost_;
+   CLOSE get_std_cost;
+   RETURN std_cost_;
+END  Get_Std_Cost; 
 -- C209 EntMahesR (END)
 
 -- C0321 EntChamuA (START)
